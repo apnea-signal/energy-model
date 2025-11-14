@@ -1,0 +1,28 @@
+# Virtual environments
+.venv/
+venv/
+
+# Python artifacts
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.build/
+
+# Packaging / build outputs
+build/
+dist/
+*.egg-info/
+
+# Notebooks
+.ipynb_checkpoints/
+
+# Tool caches
+.mypy_cache/
+.pytest_cache/
+coverage.xml
+.coverage*
+
+# OS files
+.DS_Store
+Thumbs.db

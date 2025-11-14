@@ -56,3 +56,23 @@ Video links inside each table allow quick review if a data point needs clarifica
 - Prototype feature engineering notebooks that translate annotations into model-ready sequences.
 - Train a baseline regression that links stroke or kick totals to distance before layering complex models.
 - Expand the dataset with more competitions or training sets once the processing pipeline feels solid.
+
+## Environment Setup
+
+Setup venv:
+```shell
+python3 -m venv .venv
+source .venv/bin/activate 
+```
+
+Install deps
+```shell
+python -m pip install --upgrade pip
+pip install -r requirements.txt
+```
+
+Expose the activated vevn to Jupyter so that it uses the same deps
+```shell
+python -m ipykernel install --user --name energy-model
+```
+
