@@ -37,13 +37,21 @@ Video links inside each table allow quick review if a data point needs clarifica
      variability.
    - Compare physics-informed drag models with empirical fits to flag mismatches.
 4. **Simulation and recommendations**
-   - Build notebooks or scripts that digest a proposed technique profile and return distance, time, and oxygen curves.
+   - Build command-line utilities that digest a proposed technique profile and return distance, time, and oxygen curves.
    - Validate on held-out races or future competitions to track drift and update parameters.
 
 ## Repository Layout
 ```
 .
 ├── README.md
+├── requirements.txt
+├── scripts/
+│   ├── explore_data.py
+│   ├── run_baseline.py
+│   └── simulate_profile.py
+├── src/
+│   └── energy_model/
+├── tests/
 └── data/
     └── aida_greece_2025/
         ├── athletes_and_pbs.csv
@@ -53,26 +61,37 @@ Video links inside each table allow quick review if a data point needs clarifica
 
 ## Next Steps
 - Publish a compact data schema with column descriptions, units, and validation tests.
-- Prototype feature engineering notebooks that translate annotations into model-ready sequences.
+- Prototype feature engineering scripts that translate annotations into model-ready sequences.
 - Train a baseline regression that links stroke or kick totals to distance before layering complex models.
 - Expand the dataset with more competitions or training sets once the processing pipeline feels solid.
 
 ## Environment Setup
 
-Setup venv:
 ```shell
 python3 -m venv .venv
-source .venv/bin/activate 
+source .venv/bin/activate  
+python3 -m pip install --upgrade pip
+python3 -m pip install -r requirements.txt
 ```
 
-Install deps
+## Usage Examples
+
+Explore any dataset from the console:
 ```shell
-python -m pip install --upgrade pip
-pip install -r requirements.txt
+python3 scripts/explore_data.py --dataset dnf --head 10 --describe
 ```
 
-Expose the activated vevn to Jupyter so that it uses the same deps
+Fit the baseline model:
 ```shell
-python -m ipykernel install --user --name energy-model
+python3 scripts/run_baseline.py --event DNF
 ```
 
+Simulate a technique sequence:
+```shell
+python3 scripts/simulate_profile.py --phases push:3:10 pull:5:35 glide:4:5
+```
+
+Run unit tests:
+```shell
+pytest
+```

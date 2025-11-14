@@ -14,9 +14,6 @@ build/
 dist/
 *.egg-info/
 
-# Notebooks
-.ipynb_checkpoints/
-
 # Tool caches
 .mypy_cache/
 .pytest_cache/

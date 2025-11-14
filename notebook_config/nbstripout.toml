@@ -1,3 +1,0 @@
-[nbstripout]
-install = true
-extra_keys = ["metadata.language_info.version"]

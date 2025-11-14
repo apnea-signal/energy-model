@@ -9,7 +9,7 @@ import pandas as pd
 
 
 class DatasetPaths(TypedDict, total=False):
-    """Named references to the CSV sources used across notebooks and scripts."""
+    """Named references to the CSV sources used across project scripts and modules."""
 
     athletes: Path
     dnf: Path

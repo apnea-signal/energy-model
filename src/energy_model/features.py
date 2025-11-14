@@ -1,4 +1,4 @@
-"""Feature engineering helpers shared between notebooks and scripts."""
+"""Feature engineering helpers shared between modules and CLI scripts."""
 
 from __future__ import annotations
 
