@@ -13,6 +13,7 @@ and glide to a practical oxygen budget that can inform race plans.
 - `data/aida_greece_2025/athletes_and_pbs.csv`: Athlete roster with STA personal bests plus DYN, DYNB, and DNF records.
 - `data/aida_greece_2025/DNF.csv`: Annotated DNF races with timing checkpoints, apnea estimates, stroke counts, and
   notes about extra kicks or dolphins.
+- `docs/DNF_data_dictionary.md`: Working definitions for every DNF column (update once official metadata is available).
 - `data/aida_greece_2025/DYNB.csv`: Annotated DYNB races with fin details, kick style labels, cumulative splits, and
   kick counts per length.
 
