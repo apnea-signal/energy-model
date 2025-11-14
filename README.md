@@ -1,1 +1,58 @@
-# energy-model
+# Apnea Energy Model
+
+## Overview
+This project explores how different pool apnea techniques spend oxygen, with attention on Dynamic No Fins (DNF) and
+Dynamic with Bifins (DYNB). It pulls together competition observations and training notes to connect each pull, kick,
+and glide to a practical oxygen budget that can inform race plans.
+
+## Core Questions
+- DNF: One leg kick per arm pull or multiple leg kicks?
+- DYNB: How do continuous kicks stack up against kick-and-glide cycles?
+
+## Data Inventory
+- `data/aida_greece_2025/athletes_and_pbs.csv`: Athlete roster with STA personal bests plus DYN, DYNB, and DNF records.
+- `data/aida_greece_2025/DNF.csv`: Annotated DNF races with timing checkpoints, apnea estimates, stroke counts, and
+  notes about extra kicks or dolphins.
+- `data/aida_greece_2025/DYNB.csv`: Annotated DYNB races with fin details, kick style labels, cumulative splits, and
+  kick counts per length.
+
+Video links inside each table allow quick review if a data point needs clarification.
+
+## Target Outputs
+1. A structured model that breaks each pool length into push, glide, pull, and kick phases
+   with oxygen rates per athlete.
+2. A lightweight ML layer that fits recorded splits and distances to estimate the marginal cost of every pull, kick, or
+   dolphin accent.
+3. A scenario tool that evaluates proposed sequences of pulls, kicks, and glides against estimated oxygen reserves.
+
+## Modeling Roadmap
+1. **Data validation and enrichment**
+   - Clean timing formats, distances, and descriptive text so the annotations parse consistently.
+   - Convert qualitative notes into cadence, glide-ratio, dolphin-usage, and fin-stiffness features.
+2. **Descriptive baselines**
+   - Summarize velocity, stroke efficiency, and pull or kick densities for every length.
+   - Tie STA and DYN personal bests to observed pacing choices to set athlete-specific oxygen ceilings.
+3. **Parameter estimation**
+   - Fit mixed-effects or Bayesian regressions that learn the oxygen draw of each movement while allowing athlete
+     variability.
+   - Compare physics-informed drag models with empirical fits to flag mismatches.
+4. **Simulation and recommendations**
+   - Build notebooks or scripts that digest a proposed technique profile and return distance, time, and oxygen curves.
+   - Validate on held-out races or future competitions to track drift and update parameters.
+
+## Repository Layout
+```
+.
+├── README.md
+└── data/
+    └── aida_greece_2025/
+        ├── athletes_and_pbs.csv
+        ├── DNF.csv
+        └── DYNB.csv
+```
+
+## Next Steps
+- Publish a compact data schema with column descriptions, units, and validation tests.
+- Prototype feature engineering notebooks that translate annotations into model-ready sequences.
+- Train a baseline regression that links stroke or kick totals to distance before layering complex models.
+- Expand the dataset with more competitions or training sets once the processing pipeline feels solid.
