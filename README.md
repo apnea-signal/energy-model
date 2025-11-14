@@ -76,9 +76,14 @@ python3 -m pip install -r requirements.txt
 
 ## Usage Examples
 
-Explore any dataset from the console:
+Explore DNF data from the console:
 ```shell
-python3 scripts/explore_data.py --dataset dnf --head 10 --describe
+python3 scripts/explore_dnf.py
+```
+
+Explore DYNB data:
+```shell
+python3 scripts/explore_dynb.py
 ```
 
 Fit the baseline model:
