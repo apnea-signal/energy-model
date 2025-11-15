@@ -5,6 +5,7 @@ const DATASETS = {
   DNF: "../data/aida_greece_2025/DNF.csv",
   DYNB: "../data/aida_greece_2025/DYNB.csv",
 };
+const STA_DATA_URL = "../data/aida_greece_2025/STA_PB.csv";
 
 const datasetSelect = document.getElementById("datasetSelect");
 const timeTableEl = document.getElementById("timeTable");
@@ -13,6 +14,8 @@ const distanceTimeEl = d3.select("#distanceTimeChart");
 const legendEl = d3.select("#distanceTimeLegend");
 const noteShelfEl = document.getElementById("splitStats");
 const athleteSelect = document.getElementById("athleteSelect");
+const staTableEl = document.getElementById("staTable");
+const staChartEl = d3.select("#staPerformanceChart");
 
 const state = {
   dataset: "DNF",
@@ -22,7 +25,9 @@ const state = {
 
 let timeGrid = null;
 let techniqueGrid = null;
+let staGrid = null;
 let MODEL_PARAMS = {};
+let staRoster = [];
 
 Object.keys(DATASETS).forEach((name) => {
   const option = document.createElement("option");
@@ -43,7 +48,38 @@ init();
 
 async function init() {
   await loadModelParams();
-  loadDataset(state.dataset);
+  await loadStaData();
+  await loadDataset(state.dataset);
+}
+
+async function loadStaData() {
+  try {
+    const rows = await d3.csv(STA_DATA_URL);
+    staRoster = rows
+      .map((row) => {
+        const name = (row.Name || "").trim();
+        const sta = (row.STA || "").trim();
+        const year = (row.STA_YEAR || "").trim();
+        return {
+          Name: name,
+          STA: sta,
+          STA_YEAR: year,
+          key: normalizeName(name),
+          seconds: parseTimeToSeconds(sta),
+        };
+      })
+      .filter((row) => row.Name);
+    renderStaTable();
+    if (state.data.length) {
+      renderStaCorrelationChart();
+    }
+  } catch (error) {
+    console.warn("STA PB data unavailable", error);
+    staRoster = [];
+    if (staTableEl) {
+      staTableEl.textContent = "STA PB data unavailable.";
+    }
+  }
 }
 
 async function loadDataset(dataset) {
@@ -56,6 +92,7 @@ async function loadDataset(dataset) {
   renderTables();
   renderDistanceTimeChart();
   renderSplitStats();
+  renderStaCorrelationChart();
 }
 
 async function loadModelParams() {
@@ -108,6 +145,37 @@ function renderTables() {
   const techniqueColumns = selectTechniqueColumns(columns);
   renderGridTable(timeColumns, timeTableEl, "time");
   renderGridTable(techniqueColumns, techniqueTableEl, "technique");
+}
+
+function renderStaTable() {
+  if (!staTableEl) {
+    return;
+  }
+  if (staGrid) {
+    staGrid.destroy();
+    staGrid = null;
+  }
+
+  if (!staRoster.length) {
+    staTableEl.textContent = "No STA PB rows found.";
+    return;
+  }
+
+  const grid = new Grid({
+    columns: [
+      { id: "Name", name: "Name", sort: true },
+      { id: "STA", name: "STA PB" },
+      { id: "STA_YEAR", name: "Year" },
+    ],
+    data: staRoster.map((row) => [row.Name, row.STA || "-", row.STA_YEAR || "-"]),
+    sort: true,
+    search: true,
+    pagination: false,
+    resizable: true,
+    className: { table: "preview-grid" },
+  });
+  grid.render(staTableEl);
+  staGrid = grid;
 }
 
 function renderGridTable(columns, container, type) {
@@ -279,6 +347,160 @@ function renderDistanceTimeChart() {
 
   renderSelectedLabels(svg, trajectories, x, y);
   renderLegend(trajectories, color);
+}
+
+function renderStaCorrelationChart() {
+  if (!staChartEl || !staChartEl.node()) {
+    return;
+  }
+  staChartEl.selectAll("*").remove();
+
+  if (!staRoster.length) {
+    staChartEl.append("div").attr("class", "alert").text("STA PB data unavailable.");
+    return;
+  }
+  if (!state.data.length) {
+    staChartEl.append("div").attr("class", "alert").text("Load a dataset to see the correlation plot.");
+    return;
+  }
+
+  const lookup = buildStaLookup();
+  const points = state.data
+    .map((row, idx) => {
+      const name = row.Name || `Athlete ${idx + 1}`;
+      const key = normalizeName(name);
+      const staEntry = lookup.get(key);
+      const distance = Number(row.Dist);
+      if (!staEntry || !Number.isFinite(distance) || !Number.isFinite(staEntry.seconds)) {
+        return null;
+      }
+      return {
+        name,
+        distance,
+        staSeconds: staEntry.seconds,
+        staDisplay: staEntry.STA,
+        staYear: staEntry.STA_YEAR,
+      };
+    })
+    .filter(Boolean);
+
+  if (!points.length) {
+    staChartEl
+      .append("div")
+      .attr("class", "alert")
+      .text("No overlapping athletes with STA PB values for this dataset.");
+    return;
+  }
+
+  const width = staChartEl.node().clientWidth || 900;
+  const height = 360;
+  const margins = { top: 20, right: 30, bottom: 60, left: 80 };
+  const [minSta, maxSta] = d3.extent(points, (d) => d.staSeconds);
+  const maxDistance = d3.max(points, (d) => d.distance) || 0;
+  const yDomainMax = Math.max(maxDistance, 110);
+
+  if (!Number.isFinite(minSta) || !Number.isFinite(maxSta)) {
+    staChartEl
+      .append("div")
+      .attr("class", "alert")
+      .text("STA PB values are not parsable for this dataset.");
+    return;
+  }
+
+  const x = d3
+    .scaleLinear()
+    .domain([minSta, maxSta])
+    .nice()
+    .range([margins.left, width - margins.right]);
+  const y = d3
+    .scaleLinear()
+    .domain([100, yDomainMax])
+    .nice()
+    .range([height - margins.bottom, margins.top]);
+
+  const svg = staChartEl.append("svg").attr("viewBox", `0 0 ${width} ${height}`);
+
+  svg
+    .append("g")
+    .attr("transform", `translate(0, ${height - margins.bottom})`)
+    .call(d3.axisBottom(x).tickFormat((d) => formatSeconds(d)))
+    .append("text")
+    .attr("x", width / 2)
+    .attr("y", 45)
+    .attr("fill", "#0f172a")
+    .text("Static PB (mm:ss)");
+
+  svg
+    .append("g")
+    .attr("transform", `translate(${margins.left}, 0)`)
+    .call(d3.axisLeft(y))
+    .append("text")
+    .attr("text-anchor", "end")
+    .attr("transform", "rotate(-90)")
+    .attr("x", -height / 2)
+    .attr("y", -55)
+    .attr("fill", "#0f172a")
+    .text("Total performance (m)");
+
+  renderStaTrendBand(svg, x, y);
+
+  const circles = svg
+    .append("g")
+    .selectAll("circle")
+    .data(points)
+    .enter()
+    .append("circle")
+    .attr("cx", (d) => x(d.staSeconds))
+    .attr("cy", (d) => y(d.distance))
+    .attr("r", 5)
+    .attr("fill", (d) => (Number(d.staYear) >= 2024 ? "#0284c7" : "#94a3b8"))
+    .attr("stroke", "#0f172a")
+    .attr("stroke-width", 0.5)
+    .attr("opacity", 0.9);
+
+  circles
+    .append("title")
+    .text(
+      (d) => `${d.name}: STA ${d.staDisplay || "-"}${d.staYear ? ` (${d.staYear})` : ""} → ${d.distance} m ${state.dataset}`
+    );
+}
+
+function renderStaTrendBand(svg, xScale, yScale) {
+  const samples = MODEL_PARAMS?.[state.dataset]?.sta_band?.samples || [];
+  if (!samples.length) {
+    return;
+  }
+
+  const area = d3
+    .area()
+    .x((d) => xScale(d.x))
+    .y0((d) => yScale(d.lower))
+    .y1((d) => yScale(d.upper))
+    .curve(d3.curveMonotoneX);
+
+  svg
+    .append("path")
+    .datum(samples)
+    .attr("class", "sta-band")
+    .attr("fill", "rgba(14, 165, 233, 0.12)")
+    .attr("stroke", "none")
+    .attr("d", area);
+
+  const line = d3
+    .line()
+    .x((d) => xScale(d.x))
+    .y((d) => yScale(d.center))
+    .curve(d3.curveMonotoneX);
+
+  svg
+    .append("path")
+    .datum(samples)
+    .attr("class", "sta-band-line")
+    .attr("fill", "none")
+    .attr("stroke", "#0284c7")
+    .attr("stroke-width", 1.5)
+    .attr("stroke-dasharray", "6 4")
+    .attr("d", line);
 }
 
 function renderSplitStats() {
@@ -494,6 +716,9 @@ function parseTimeToSeconds(value) {
   if (value === undefined || value === null || value === "-") {
     return NaN;
   }
+  if (typeof value === "string" && value.trim() === "") {
+    return NaN;
+  }
   if (typeof value === "number") {
     return value;
   }
@@ -587,4 +812,18 @@ function labelWidth(text) {
   const padding = 8;
   const charWidth = 6;
   return Math.max(32, padding + text.length * charWidth);
+}
+
+function buildStaLookup() {
+  const map = new Map();
+  staRoster.forEach((row) => {
+    if (row.key) {
+      map.set(row.key, row);
+    }
+  });
+  return map;
+}
+
+function normalizeName(name) {
+  return (name || "").trim().toLowerCase();
 }

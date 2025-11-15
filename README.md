@@ -10,7 +10,7 @@ and glide to a practical oxygen budget that can inform race plans.
 - DYNB: How do continuous kicks stack up against kick-and-glide cycles?
 
 ## Data Inventory
-- `data/aida_greece_2025/athletes_and_pbs.csv`: Athlete roster with STA personal bests plus DYN, DYNB, and DNF records.
+- `data/aida_greece_2025/athletes_and_pbs.csv`: Athlete list with STA personal bests plus DYN, DYNB, and DNF records.
 - `data/aida_greece_2025/DNF.csv`: Annotated DNF races with timing checkpoints, apnea estimates, stroke counts, and
   notes about extra kicks or dolphins.
 - `docs/DNF_data_dictionary.md`: Working definitions for every DNF column (update once official metadata is available).

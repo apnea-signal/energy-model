@@ -4,9 +4,10 @@ from __future__ import annotations
 
 import argparse
 import json
+import math
 import sys
 from pathlib import Path
-from typing import Dict
+from typing import Dict, Iterable
 
 import numpy as np
 import pandas as pd
@@ -82,6 +83,7 @@ def build_payloads(
     frames: Dict[str, pd.DataFrame],
     features: Dict[str, str],
     split_stats: dict | None,
+    sta_frame: pd.DataFrame | None,
 ) -> tuple[dict, dict]:
     """Return model metadata and per-athlete inference dictionaries."""
 
@@ -98,6 +100,7 @@ def build_payloads(
         metrics = regression_metrics(y, predictions)
 
         splits_for_event = extract_split_stats(split_stats, event)
+        sta_band = compute_sta_band(frame, sta_frame)
 
         model_payload[event] = {
             "feature": feature,
@@ -108,6 +111,7 @@ def build_payloads(
             "feature_range": [float(np.min(x)), float(np.max(x))],
             "target_range": [float(np.min(y)), float(np.max(y))],
             "splits": splits_for_event,
+            "sta_band": sta_band,
             **metrics,
         }
 
@@ -136,11 +140,13 @@ def main() -> None:
     frames = load_competition_data(args.data_root)
     features = {"DNF": args.dnf_feature, "DYNB": args.dynb_feature}
 
+    sta_frame = load_sta_pb(args.data_root)
+
     split_stats = load_split_stats(args.split_stats)
 
     args.output_dir.mkdir(parents=True, exist_ok=True)
 
-    model_payload, inference_payload = build_payloads(frames, features, split_stats)
+    model_payload, inference_payload = build_payloads(frames, features, split_stats, sta_frame)
 
     model_path = args.output_dir / "model_params.json"
     inference_path = args.output_dir / "inference_predictions.json"
@@ -166,6 +172,153 @@ def extract_split_stats(split_stats: dict | None, event: str) -> list[dict]:
         return []
     rows = split_stats.get("splits") or []
     return [row for row in rows if row.get("event") == event]
+
+
+def load_sta_pb(base_path: Path) -> pd.DataFrame | None:
+    csv_path = base_path / "STA_PB.csv"
+    if not csv_path.exists():
+        return None
+    return pd.read_csv(csv_path)
+
+
+def compute_sta_band(event_frame: pd.DataFrame, sta_frame: pd.DataFrame | None) -> dict | None:
+    if sta_frame is None or event_frame is None or event_frame.empty:
+        return None
+
+    lookup = build_sta_lookup(sta_frame)
+    if not lookup:
+        return None
+
+    points: list[tuple[float, float]] = []
+    for _, row in event_frame.iterrows():
+        name = str(row.get("Name", "")).strip()
+        if not name:
+            continue
+        key = normalize_name(name)
+        sta_entry = lookup.get(key)
+        if not sta_entry:
+            continue
+        sta_seconds = sta_entry["seconds"]
+        dist_value = safe_float(row.get("Dist"))
+        if sta_seconds is None or dist_value is None:
+            continue
+        points.append((sta_seconds, dist_value))
+
+    if len(points) < 2:
+        return None
+
+    return regression_band(points)
+
+
+def build_sta_lookup(sta_frame: pd.DataFrame) -> dict[str, dict]:
+    lookup: dict[str, dict] = {}
+    for _, row in sta_frame.iterrows():
+        name = str(row.get("Name", "")).strip()
+        if not name:
+            continue
+        seconds = parse_time_to_seconds(row.get("STA"))
+        if seconds is None or not math.isfinite(seconds):
+            continue
+        lookup[normalize_name(name)] = {"seconds": float(seconds)}
+    return lookup
+
+
+def parse_time_to_seconds(value) -> float | None:
+    if value is None:
+        return None
+    if isinstance(value, (int, float)):
+        return float(value)
+    text = str(value).strip()
+    if not text or text in {"-", "--"}:
+        return None
+    parts = text.split(":")
+    try:
+        numbers = [int(part) for part in parts]
+    except ValueError:
+        return None
+    if len(numbers) == 3:
+        hours, minutes, seconds = numbers
+        return float(hours * 3600 + minutes * 60 + seconds)
+    if len(numbers) == 2:
+        minutes, seconds = numbers
+        return float(minutes * 60 + seconds)
+    if len(numbers) == 1:
+        return float(numbers[0])
+    return None
+
+
+def normalize_name(value: str) -> str:
+    return " ".join(value.split()).lower()
+
+
+def safe_float(value) -> float | None:
+    if value is None or (isinstance(value, float) and math.isnan(value)):
+        return None
+    try:
+        number = float(value)
+    except (TypeError, ValueError):
+        return None
+    return number if math.isfinite(number) else None
+
+
+def regression_band(points: Iterable[tuple[float, float]]) -> dict | None:
+    xs = np.array([p[0] for p in points], dtype=float)
+    ys = np.array([p[1] for p in points], dtype=float)
+    if len(xs) < 2:
+        return None
+    if np.ptp(xs) == 0:
+        return None
+
+    mean_x = float(np.mean(xs))
+    mean_y = float(np.mean(ys))
+
+    numerator = float(np.sum((xs - mean_x) * (ys - mean_y)))
+    denominator = float(np.sum((xs - mean_x) ** 2))
+    if denominator == 0:
+        return None
+
+    slope = numerator / denominator
+    top_idx = int(np.argmax(ys))
+    top_x = xs[top_idx]
+    top_y = ys[top_idx]
+    if top_x != mean_x:
+        candidate_slope = (top_y - mean_y) / (top_x - mean_x)
+        if math.isfinite(candidate_slope) and candidate_slope > slope:
+            slope = candidate_slope
+
+    intercept = mean_y - slope * mean_x
+
+    residuals = ys - (slope * xs + intercept)
+    denom = max(len(xs) - 2, 1)
+    residual_std = float(np.sqrt(np.sum(residuals**2) / denom))
+    band_width = float(max(5.0, residual_std * 0.75))
+
+    domain = [float(np.min(xs)), float(np.max(xs))]
+    if domain[0] == domain[1]:
+        return None
+
+    sample_count = int(max(20, min(60, len(xs) * 2)))
+    sample_xs = np.linspace(domain[0], domain[1], sample_count)
+    samples = []
+    for x in sample_xs:
+        center = slope * x + intercept
+        samples.append(
+            {
+                "x": float(x),
+                "center": float(center),
+                "lower": float(center - band_width),
+                "upper": float(center + band_width),
+            }
+        )
+
+    return {
+        "domain": domain,
+        "slope": float(slope),
+        "intercept": float(intercept),
+        "band_width": band_width,
+        "point_count": int(len(xs)),
+        "samples": samples,
+    }
 
 
 if __name__ == "__main__":
