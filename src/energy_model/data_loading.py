@@ -27,6 +27,8 @@ def load_competition_data(base_path: Path) -> Dict[str, pd.DataFrame]:
 
     frames: Dict[str, pd.DataFrame] = {}
     for name, csv_path in paths.items():
+        if not csv_path.exists():
+            continue
         frames[name] = pd.read_csv(csv_path)
     return frames
 

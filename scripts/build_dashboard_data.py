@@ -50,6 +50,12 @@ def parse_args() -> argparse.Namespace:
         default=DEFAULT_FEATURES["DYNB"],
         help="Column name to treat as the explanatory variable for the DYNB regression.",
     )
+    parser.add_argument(
+        "--split-stats",
+        type=Path,
+        default=PROJECT_ROOT / "data" / "derived" / "weighted_split_stats.json",
+        help="Optional JSON file with weighted split summaries (output of build_split_stats.py).",
+    )
     return parser.parse_args()
 
 
@@ -72,7 +78,11 @@ def regression_metrics(y_true: np.ndarray, y_pred: np.ndarray) -> Dict[str, floa
     return {"mae": mae, "rmse": rmse, "r_squared": r_squared}
 
 
-def build_payloads(frames: Dict[str, pd.DataFrame], features: Dict[str, str]) -> tuple[dict, dict]:
+def build_payloads(
+    frames: Dict[str, pd.DataFrame],
+    features: Dict[str, str],
+    split_stats: dict | None,
+) -> tuple[dict, dict]:
     """Return model metadata and per-athlete inference dictionaries."""
 
     model_payload: dict = {}
@@ -87,6 +97,8 @@ def build_payloads(frames: Dict[str, pd.DataFrame], features: Dict[str, str]) ->
         predictions = model.predict(x)
         metrics = regression_metrics(y, predictions)
 
+        splits_for_event = extract_split_stats(split_stats, event)
+
         model_payload[event] = {
             "feature": feature,
             "target": TARGET_COLUMN,
@@ -95,6 +107,7 @@ def build_payloads(frames: Dict[str, pd.DataFrame], features: Dict[str, str]) ->
             "count": int(len(frame)),
             "feature_range": [float(np.min(x)), float(np.max(x))],
             "target_range": [float(np.min(y)), float(np.max(y))],
+            "splits": splits_for_event,
             **metrics,
         }
 
@@ -123,9 +136,11 @@ def main() -> None:
     frames = load_competition_data(args.data_root)
     features = {"DNF": args.dnf_feature, "DYNB": args.dynb_feature}
 
+    split_stats = load_split_stats(args.split_stats)
+
     args.output_dir.mkdir(parents=True, exist_ok=True)
 
-    model_payload, inference_payload = build_payloads(frames, features)
+    model_payload, inference_payload = build_payloads(frames, features, split_stats)
 
     model_path = args.output_dir / "model_params.json"
     inference_path = args.output_dir / "inference_predictions.json"
@@ -135,6 +150,22 @@ def main() -> None:
 
     print(f"Wrote model params to {model_path}")
     print(f"Wrote inference payload to {inference_path}")
+
+
+def load_split_stats(path: Path) -> dict | None:
+    if not path.exists():
+        return None
+    try:
+        return json.loads(path.read_text())
+    except json.JSONDecodeError:
+        return None
+
+
+def extract_split_stats(split_stats: dict | None, event: str) -> list[dict]:
+    if not split_stats:
+        return []
+    rows = split_stats.get("splits") or []
+    return [row for row in rows if row.get("event") == event]
 
 
 if __name__ == "__main__":

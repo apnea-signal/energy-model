@@ -11,6 +11,7 @@ const timeTableEl = document.getElementById("timeTable");
 const techniqueTableEl = document.getElementById("techniqueTable");
 const distanceTimeEl = d3.select("#distanceTimeChart");
 const legendEl = d3.select("#distanceTimeLegend");
+const noteShelfEl = document.getElementById("splitStats");
 const athleteSelect = document.getElementById("athleteSelect");
 
 const state = {
@@ -21,6 +22,7 @@ const state = {
 
 let timeGrid = null;
 let techniqueGrid = null;
+let MODEL_PARAMS = {};
 
 Object.keys(DATASETS).forEach((name) => {
   const option = document.createElement("option");
@@ -34,9 +36,15 @@ datasetSelect.addEventListener("change", () => loadDataset(datasetSelect.value))
 athleteSelect.addEventListener("change", () => {
   state.selectedAthlete = athleteSelect.value;
   renderDistanceTimeChart();
+  renderSplitStats();
 });
 
-loadDataset(state.dataset);
+init();
+
+async function init() {
+  await loadModelParams();
+  loadDataset(state.dataset);
+}
 
 async function loadDataset(dataset) {
   state.dataset = dataset;
@@ -47,6 +55,22 @@ async function loadDataset(dataset) {
   populateAthleteSelect();
   renderTables();
   renderDistanceTimeChart();
+  renderSplitStats();
+}
+
+async function loadModelParams() {
+  try {
+    const response = await fetch("./dashboard_data/model_params.json");
+    if (!response.ok) {
+      throw new Error("Failed to fetch model params");
+    }
+    MODEL_PARAMS = await response.json();
+    window.MODEL_PARAMS = MODEL_PARAMS;
+  } catch (error) {
+    console.warn("Model params unavailable", error);
+    MODEL_PARAMS = {};
+    window.MODEL_PARAMS = MODEL_PARAMS;
+  }
 }
 
 function populateAthleteSelect() {
@@ -73,8 +97,6 @@ function populateAthleteSelect() {
   let nextSelection = "";
   if (previous && names.includes(previous)) {
     nextSelection = previous;
-  } else if (topAthlete && names.includes(topAthlete)) {
-    nextSelection = topAthlete;
   }
   athleteSelect.value = nextSelection;
   state.selectedAthlete = nextSelection;
@@ -259,8 +281,34 @@ function renderDistanceTimeChart() {
   renderLegend(trajectories, color);
 }
 
+function renderSplitStats() {
+  noteShelfEl.innerHTML = "";
+  const dataset = state.dataset;
+  const splits = MODEL_PARAMS?.[dataset]?.splits || [];
+  if (!splits.length) {
+    const fallback = document.createElement("p");
+    fallback.textContent = "Weighted split stats unavailable. Run build_split_stats.py.";
+    noteShelfEl.appendChild(fallback);
+    return;
+  }
+  const intro = document.createElement("p");
+  intro.className = "note-lede";
+  intro.textContent = `${dataset} weighted split targets from the longest-distance athletes:`;
+  noteShelfEl.appendChild(intro);
+  const list = document.createElement("dl");
+  splits.forEach((split) => {
+    const dt = document.createElement("dt");
+    dt.textContent = `${split.split_label} (${split.split_distance_m} m)`;
+    const dd = document.createElement("dd");
+    dd.textContent = split.weighted_time_str;
+    list.appendChild(dt);
+    list.appendChild(dd);
+  });
+  noteShelfEl.appendChild(list);
+}
+
 function renderSelectedLabels(svg, trajectories, x, y) {
-  const points = computeSelectedSplitTimes(trajectories);
+  const points = getReferenceSplitPoints(trajectories);
   const existingLabels = svg.selectAll(".selected-label");
   existingLabels.remove();
   if (!points.length) {
@@ -504,7 +552,22 @@ function computeSelectedSplitTimes(trajectories) {
   if (!athlete) {
     return [];
   }
-  return athlete.points;
+  return athlete.points.map((point) => ({ distance: point.distance, time: point.time }));
+}
+
+function getReferenceSplitPoints(trajectories) {
+  const selectedPoints = computeSelectedSplitTimes(trajectories);
+  if (selectedPoints.length) {
+    return selectedPoints;
+  }
+  const baseline = [{ distance: 0, time: 0 }];
+  const splits = MODEL_PARAMS?.[state.dataset]?.splits || [];
+  splits.forEach((split) => {
+    if (Number.isFinite(split?.split_distance_m) && Number.isFinite(split?.weighted_time_s)) {
+      baseline.push({ distance: split.split_distance_m, time: split.weighted_time_s });
+    }
+  });
+  return baseline;
 }
 
 function getTopAthleteName() {

@@ -196,8 +196,8 @@
       "event": "DYNB",
       "feature": 147.0,
       "actual_distance": 300.0,
-      "predicted_distance": 242.00354531353872,
-      "residual": 57.99645468646128,
+      "predicted_distance": 246.41815003569943,
+      "residual": 53.581849964300574,
       "video": "https://tv.cmas.org/sportitem/68235031f465e0724b3b9fa8?currenttime=20821.434668"
     },
     {
@@ -205,8 +205,8 @@
       "event": "DYNB",
       "feature": 81.0,
       "actual_distance": 150.0,
-      "predicted_distance": 196.3477361695842,
-      "residual": -46.34773616958421,
+      "predicted_distance": 195.75429007558415,
+      "residual": -45.75429007558415,
       "video": "https://tv.cmas.org/sportitem/68235031f465e0724b3b9fa8?currenttime=19503.425274"
     },
     {
@@ -214,8 +214,8 @@
       "event": "DYNB",
       "feature": 121.0,
       "actual_distance": 284.0,
-      "predicted_distance": 224.01792352955664,
-      "residual": 59.98207647044336,
+      "predicted_distance": 226.45965974838128,
+      "residual": 57.540340251618716,
       "video": "https://tv.cmas.org/sportitem/68235031f465e0724b3b9fa8?currenttime=16616.056437"
     },
     {
@@ -223,8 +223,8 @@
       "event": "DYNB",
       "feature": 140.0,
       "actual_distance": 231.0,
-      "predicted_distance": 237.16126252554358,
-      "residual": -6.161262525543577,
+      "predicted_distance": 241.04471034295995,
+      "residual": -10.044710342959945,
       "video": "https://tv.cmas.org/sportitem/68235031f465e0724b3b9fa8?currenttime=16616.056437"
     },
     {
@@ -232,8 +232,8 @@
       "event": "DYNB",
       "feature": 72.0,
       "actual_distance": 157.0,
-      "predicted_distance": 190.12194401359042,
-      "residual": -33.12194401359042,
+      "predicted_distance": 188.84558189920483,
+      "residual": -31.84558189920483,
       "video": "https://tv.cmas.org/sportitem/68235031f465e0724b3b9fa8?currenttime=19503.425274"
     },
     {
@@ -241,8 +241,8 @@
       "event": "DYNB",
       "feature": 77.0,
       "actual_distance": 150.0,
-      "predicted_distance": 193.58071743358698,
-      "residual": -43.58071743358698,
+      "predicted_distance": 192.68375310830444,
+      "residual": -42.683753108304444,
       "video": "https://tv.cmas.org/sportitem/68235031f465e0724b3b9fa8?currenttime=18448.20048"
     },
     {
@@ -250,8 +250,8 @@
       "event": "DYNB",
       "feature": 94.0,
       "actual_distance": 243.0,
-      "predicted_distance": 205.34054706157525,
-      "residual": 37.65945293842475,
+      "predicted_distance": 205.73353521924324,
+      "residual": 37.26646478075676,
       "video": "https://tv.cmas.org/sportitem/68235031f465e0724b3b9fa8?currenttime=17728.437598"
     },
     {
@@ -259,8 +259,8 @@
       "event": "DYNB",
       "feature": 99.0,
       "actual_distance": 243.0,
-      "predicted_distance": 208.7993204815718,
-      "residual": 34.20067951842819,
+      "predicted_distance": 209.57170642834288,
+      "residual": 33.42829357165712,
       "video": "https://tv.cmas.org/sportitem/68235031f465e0724b3b9fa8?currenttime=20368.279456"
     },
     {
@@ -268,17 +268,17 @@
       "event": "DYNB",
       "feature": 136.0,
       "actual_distance": 257.0,
-      "predicted_distance": 234.3942437895463,
-      "residual": 22.605756210453706,
+      "predicted_distance": 237.9741733756802,
+      "residual": 19.02582662431979,
       "video": "https://tv.cmas.org/sportitem/68235031f465e0724b3b9fa8?currenttime=19957.676901"
     },
     {
       "name": "MILOSIC Boris",
       "event": "DYNB",
       "feature": 156.0,
-      "actual_distance": 204.0,
-      "predicted_distance": 248.22933746953254,
-      "residual": -44.22933746953254,
+      "actual_distance": 250.0,
+      "predicted_distance": 253.32685821207878,
+      "residual": -3.3268582120787755,
       "video": "https://tv.cmas.org/sportitem/68235031f465e0724b3b9fa8?currenttime=18080.16821"
     },
     {
@@ -286,8 +286,8 @@
       "event": "DYNB",
       "feature": 120.0,
       "actual_distance": 250.0,
-      "predicted_distance": 223.32616884555733,
-      "residual": 26.673831154442667,
+      "predicted_distance": 225.69202550656138,
+      "residual": 24.30797449343862,
       "video": "https://tv.cmas.org/sportitem/68235031f465e0724b3b9fa8?currenttime=18080.16821"
     },
     {
@@ -295,8 +295,8 @@
       "event": "DYNB",
       "feature": 105.0,
       "actual_distance": 222.0,
-      "predicted_distance": 212.94984858556768,
-      "residual": 9.050151414432321,
+      "predicted_distance": 214.17751187926245,
+      "residual": 7.822488120737546,
       "video": "https://tv.cmas.org/sportitem/68235031f465e0724b3b9fa8?currenttime=17000.872018"
     },
     {
@@ -304,8 +304,8 @@
       "event": "DYNB",
       "feature": 107.0,
       "actual_distance": 248.0,
-      "predicted_distance": 214.3333579535663,
-      "residual": 33.66664204643371,
+      "predicted_distance": 215.71278036290232,
+      "residual": 32.28721963709768,
       "video": "https://tv.cmas.org/sportitem/68235031f465e0724b3b9fa8?currenttime=17728.437598"
     },
     {
@@ -313,8 +313,8 @@
       "event": "DYNB",
       "feature": 118.0,
       "actual_distance": 215.0,
-      "predicted_distance": 221.94265947755872,
-      "residual": -6.9426594775587205,
+      "predicted_distance": 224.1567570229215,
+      "residual": -9.15675702292151,
       "video": "https://tv.cmas.org/sportitem/68235031f465e0724b3b9fa8?currenttime=14241.224367"
     },
     {
@@ -322,8 +322,8 @@
       "event": "DYNB",
       "feature": 205.0,
       "actual_distance": 282.0,
-      "predicted_distance": 282.1253169854988,
-      "residual": -0.12531698549878456,
+      "predicted_distance": 290.94093606125523,
+      "residual": -8.940936061255229,
       "video": "https://tv.cmas.org/sportitem/68235031f465e0724b3b9fa8?currenttime=20368.279456"
     },
     {
@@ -331,8 +331,8 @@
       "event": "DYNB",
       "feature": 168.0,
       "actual_distance": 178.0,
-      "predicted_distance": 256.5303936775243,
-      "residual": -78.53039367752427,
+      "predicted_distance": 262.5384691139179,
+      "residual": -84.53846911391793,
       "video": "https://tv.cmas.org/sportitem/68235031f465e0724b3b9fa8?currenttime=11579.371672"
     },
     {
@@ -340,8 +340,8 @@
       "event": "DYNB",
       "feature": 150.0,
       "actual_distance": 250.0,
-      "predicted_distance": 244.07880936553667,
-      "residual": 5.921190634463329,
+      "predicted_distance": 248.72105276115923,
+      "residual": 1.2789472388407717,
       "video": "https://tv.cmas.org/sportitem/68235031f465e0724b3b9fa8?currenttime=17728.437598"
     },
     {
@@ -349,8 +349,8 @@
       "event": "DYNB",
       "feature": 109.0,
       "actual_distance": 187.0,
-      "predicted_distance": 215.7168673215649,
-      "residual": -28.716867321564905,
+      "predicted_distance": 217.24804884654216,
+      "residual": -30.24804884654216,
       "video": "https://tv.cmas.org/sportitem/68235031f465e0724b3b9fa8?currenttime=13643.956864"
     }
   ]

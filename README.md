@@ -94,6 +94,11 @@ Fit the baseline model:
 python3 scripts/run_baseline.py --event DNF
 ```
 
+Build weighted split statistics (distance-weighted averages plus derived paces):
+```shell
+python3 scripts/build_split_stats.py
+```
+
 Simulate a technique sequence:
 ```shell
 python3 scripts/simulate_profile.py --phases push:3:10 pull:5:35 glide:4:5
