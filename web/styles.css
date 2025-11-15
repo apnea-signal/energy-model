@@ -146,6 +146,11 @@ button:disabled {
   border-radius: 999px;
 }
 
+.legend-item.selected {
+  font-weight: 600;
+  color: #0ea5e9;
+}
+
 .summary-list {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));

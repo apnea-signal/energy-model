@@ -11,10 +11,12 @@ const timeTableEl = document.getElementById("timeTable");
 const techniqueTableEl = document.getElementById("techniqueTable");
 const distanceTimeEl = d3.select("#distanceTimeChart");
 const legendEl = d3.select("#distanceTimeLegend");
+const athleteSelect = document.getElementById("athleteSelect");
 
 const state = {
   dataset: "DNF",
   data: [],
+  selectedAthlete: "",
 };
 
 let timeGrid = null;
@@ -29,6 +31,10 @@ Object.keys(DATASETS).forEach((name) => {
 
 datasetSelect.value = state.dataset;
 datasetSelect.addEventListener("change", () => loadDataset(datasetSelect.value));
+athleteSelect.addEventListener("change", () => {
+  state.selectedAthlete = athleteSelect.value;
+  renderDistanceTimeChart();
+});
 
 loadDataset(state.dataset);
 
@@ -38,8 +44,40 @@ async function loadDataset(dataset) {
   const url = DATASETS[dataset];
   const data = await d3.csv(url, d3.autoType);
   state.data = data;
+  populateAthleteSelect();
   renderTables();
   renderDistanceTimeChart();
+}
+
+function populateAthleteSelect() {
+  const names = Array.from(
+    new Set(
+      state.data
+        .map((row, idx) => row.Name || `Athlete ${idx + 1}`)
+        .filter((name) => Boolean(name))
+    )
+  ).sort((a, b) => a.localeCompare(b));
+  const previous = state.selectedAthlete;
+  const topAthlete = getTopAthleteName();
+  athleteSelect.innerHTML = "";
+  const allOption = document.createElement("option");
+  allOption.value = "";
+  allOption.textContent = "All athletes";
+  athleteSelect.appendChild(allOption);
+  names.forEach((name) => {
+    const option = document.createElement("option");
+    option.value = name;
+    option.textContent = name;
+    athleteSelect.appendChild(option);
+  });
+  let nextSelection = "";
+  if (previous && names.includes(previous)) {
+    nextSelection = previous;
+  } else if (topAthlete && names.includes(topAthlete)) {
+    nextSelection = topAthlete;
+  }
+  athleteSelect.value = nextSelection;
+  state.selectedAthlete = nextSelection;
 }
 
 function renderTables() {
@@ -98,6 +136,12 @@ function renderGridTable(columns, container, type) {
 
   if (type === "time") {
     timeGrid = grid;
+    setTimeout(() => {
+      const distIndex = columns.indexOf("Dist");
+      if (distIndex >= 0) {
+        grid.updateConfig({ sort: { column: distIndex, direction: "desc" } }).forceRender();
+      }
+    }, 0);
   } else {
     techniqueGrid = grid;
   }
@@ -179,6 +223,9 @@ function renderDistanceTimeChart() {
     .x((d) => x(d.distance))
     .y((d) => y(d.time));
 
+  const selected = state.selectedAthlete;
+  const highlightActive = Boolean(selected);
+
   svg
     .selectAll(".athlete-line")
     .data(trajectories)
@@ -187,9 +234,9 @@ function renderDistanceTimeChart() {
     .attr("class", "athlete-line")
     .attr("fill", "none")
     .attr("stroke", (d) => color(d.name))
-    .attr("stroke-width", 2)
+    .attr("stroke-width", (d) => (selected === d.name ? 3.2 : 1.8))
     .attr("d", (d) => line(d.points))
-    .attr("opacity", 0.9);
+    .attr("opacity", (d) => (highlightActive ? (d.name === selected ? 0.95 : 0.25) : 0.9));
 
   svg
     .selectAll(".athlete-points")
@@ -203,17 +250,20 @@ function renderDistanceTimeChart() {
     .append("circle")
     .attr("cx", (d) => x(d.distance))
     .attr("cy", (d) => y(d.time))
-    .attr("r", 3)
+    .attr("r", (d) => (highlightActive && d.name !== selected ? 2 : 3))
+    .attr("opacity", (d) => (highlightActive && d.name !== selected ? 0.3 : 1))
     .append("title")
     .text((d) => `${d.name}: ${d.distance} m @ ${formatSeconds(d.time)}`);
 
-  renderAverageSplitLine(svg, x, y);
+  renderSelectedLabels(svg, trajectories, x, y);
   renderLegend(trajectories, color);
 }
 
-function renderAverageSplitLine(svg, x, y) {
-  const points = computeAverageSplitTimes();
-  if (points.length < 2) {
+function renderSelectedLabels(svg, trajectories, x, y) {
+  const points = computeSelectedSplitTimes(trajectories);
+  const existingLabels = svg.selectAll(".selected-label");
+  existingLabels.remove();
+  if (!points.length) {
     return;
   }
 
@@ -232,25 +282,12 @@ function renderAverageSplitLine(svg, x, y) {
     .attr("opacity", 0.9)
     .attr("d", line);
 
-  svg
-    .selectAll(".avg-point")
-    .data(points)
-    .enter()
-    .append("circle")
-    .attr("class", "avg-point")
-    .attr("cx", (d) => x(d.distance))
-    .attr("cy", (d) => y(d.time))
-    .attr("r", 4)
-    .attr("fill", "#0f172a")
-    .append("title")
-    .text((d) => `Avg ${d.distance} m @ ${formatSeconds(d.time)}`);
-
   const labels = svg
-    .selectAll(".avg-label")
+    .selectAll(".selected-label")
     .data(points)
     .enter()
     .append("g")
-    .attr("class", "avg-label")
+    .attr("class", "selected-label")
     .attr("transform", (d) => `translate(${x(d.distance) + 6}, ${y(d.time) - 10})`);
 
   labels
@@ -273,19 +310,37 @@ function renderAverageSplitLine(svg, x, y) {
 }
 
 function renderLegend(trajectories, color) {
-  const items = legendEl
-    .selectAll("div")
-    .data(trajectories)
+  const selected = state.selectedAthlete;
+  const items = legendEl.selectAll("div").data(trajectories, (d) => d.name);
+
+  items.exit().remove();
+
+  const enter = items
     .enter()
     .append("div")
     .attr("class", "legend-item");
 
-  items
+  enter
     .append("span")
     .attr("class", "legend-swatch")
     .style("background", (d) => color(d.name));
 
-  items.append("span").text((d) => d.name);
+  enter
+    .append("span")
+    .text((d) => d.name);
+
+  enter.merge(items).classed("selected", (d) => selected && d.name === selected);
+
+  legendEl.selectAll(".legend-item").on("click", (event, d) => {
+    if (state.selectedAthlete === d.name) {
+      state.selectedAthlete = "";
+      athleteSelect.value = "";
+    } else {
+      state.selectedAthlete = d.name;
+      athleteSelect.value = d.name;
+    }
+    renderDistanceTimeChart();
+  });
 }
 
 function buildTrajectories() {
@@ -440,31 +495,29 @@ function getSplitDistances() {
     .sort((a, b) => a - b);
 }
 
-function computeAverageSplitTimes() {
-  const splitDistances = getSplitDistances();
-  const points = [{ distance: 0, time: 0 }];
+function computeSelectedSplitTimes(trajectories) {
+  const selected = state.selectedAthlete;
+  if (!selected) {
+    return [];
+  }
+  const athlete = trajectories.find((item) => item.name === selected);
+  if (!athlete) {
+    return [];
+  }
+  return athlete.points;
+}
 
-  splitDistances.forEach((distance) => {
-    const times = state.data
-      .map((row) => parseTimeToSeconds(row[`T${distance}`]))
-      .filter((value) => Number.isFinite(value));
-    if (times.length) {
-      points.push({ distance, time: d3.mean(times) });
+function getTopAthleteName() {
+  let topName = "";
+  let topDistance = -Infinity;
+  state.data.forEach((row, index) => {
+    const distance = Number(row.Dist);
+    if (Number.isFinite(distance) && distance > topDistance) {
+      topDistance = distance;
+      topName = row.Name || `Athlete ${index + 1}`;
     }
   });
-
-  if (points.length >= 2) {
-    const last = points[points.length - 1];
-    const prev = points[points.length - 2];
-    const targetDistance = 250;
-    if (last.distance < targetDistance) {
-      const slope = (last.time - prev.time) / (last.distance - prev.distance || 1);
-      const extrapolatedTime = last.time + slope * (targetDistance - last.distance);
-      points.push({ distance: targetDistance, time: extrapolatedTime });
-    }
-  }
-
-  return points;
+  return topName;
 }
 
 function labelWidth(text) {
