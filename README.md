@@ -16,6 +16,8 @@ and glide to a practical oxygen budget that can inform race plans.
 - `docs/DNF_data_dictionary.md`: Working definitions for every DNF column (update once official metadata is available).
 - `data/aida_greece_2025/DYNB.csv`: Annotated DYNB races with fin details, kick style labels, cumulative splits, and
   kick counts per length.
+- `docs/DYNB_data_dictionary.md`: Working definitions for DYNB columns; breaks down per-split `T*`/`K*` behavior and
+  total kick counts.
 
 Video links inside each table allow quick review if a data point needs clarification.
 
