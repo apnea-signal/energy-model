@@ -1,0 +1,357 @@
+{
+  "DNF": [
+    {
+      "name": "MALINA Mateusz",
+      "event": "DNF",
+      "feature": 1.0,
+      "actual_distance": 239.0,
+      "predicted_distance": 190.47330097087382,
+      "residual": 48.52669902912618,
+      "video": "https://tv.cmas.org/sportitem/68234fc9a298818ef67e4329?currenttime=9663.69"
+    },
+    {
+      "name": "CHAN Kai-Hsiang",
+      "event": "DNF",
+      "feature": 1.0,
+      "actual_distance": 235.5,
+      "predicted_distance": 190.47330097087382,
+      "residual": 45.02669902912618,
+      "video": "https://tv.cmas.org/sportitem/68234fc9a298818ef67e4329?currenttime=9292.526563"
+    },
+    {
+      "name": "KUBIAK Piotr",
+      "event": "DNF",
+      "feature": 1.0,
+      "actual_distance": 225.5,
+      "predicted_distance": 190.47330097087382,
+      "residual": 35.02669902912618,
+      "video": "https://tv.cmas.org/sportitem/68234fc9a298818ef67e4329?currenttime=7254.23"
+    },
+    {
+      "name": "BOURDILA Guillaume",
+      "event": "DNF",
+      "feature": 1.0,
+      "actual_distance": 221.5,
+      "predicted_distance": 190.47330097087382,
+      "residual": 31.026699029126178,
+      "video": "https://tv.cmas.org/sportitem/68234fc9a298818ef67e4329?currenttime=8942.05"
+    },
+    {
+      "name": "QUESADA Francisco",
+      "event": "DNF",
+      "feature": 1.0,
+      "actual_distance": 207.5,
+      "predicted_distance": 190.47330097087382,
+      "residual": 17.026699029126178,
+      "video": "https://tv.cmas.org/sportitem/68234fc9a298818ef67e4329?currenttime=8581.24"
+    },
+    {
+      "name": "PELES Vanja",
+      "event": "DNF",
+      "feature": 1.0,
+      "actual_distance": 203.5,
+      "predicted_distance": 190.47330097087382,
+      "residual": 13.026699029126178,
+      "video": "https://tv.cmas.org/sportitem/68234fc9a298818ef67e4329?currenttime=9663.69"
+    },
+    {
+      "name": "ELU Olivier",
+      "event": "DNF",
+      "feature": 1.0,
+      "actual_distance": 203.0,
+      "predicted_distance": 190.47330097087382,
+      "residual": 12.526699029126178,
+      "video": "https://tv.cmas.org/sportitem/68234fc9a298818ef67e4329?currenttime=8222.049999"
+    },
+    {
+      "name": "CERIMAGIC Enes",
+      "event": "DNF",
+      "feature": 1.0,
+      "actual_distance": 202.0,
+      "predicted_distance": 190.47330097087382,
+      "residual": 11.526699029126178,
+      "video": "https://tv.cmas.org/sportitem/68234fc9a298818ef67e4329?currenttime=6354.157084"
+    },
+    {
+      "name": "PAVKOVIC Nenad",
+      "event": "DNF",
+      "feature": 3.0,
+      "actual_distance": 200.0,
+      "predicted_distance": 193.49757281553397,
+      "residual": 6.502427184466029,
+      "video": "https://tv.cmas.org/sportitem/68234fc9a298818ef67e4329?currenttime=7852.04"
+    },
+    {
+      "name": "BRIANTSEV Mikhail",
+      "event": "DNF",
+      "feature": 1.0,
+      "actual_distance": 195.0,
+      "predicted_distance": 190.47330097087382,
+      "residual": 4.526699029126178,
+      "video": "https://tv.cmas.org/sportitem/68234fc9a298818ef67e4329?currenttime=7558.04"
+    },
+    {
+      "name": "LEE Po-Yen",
+      "event": "DNF",
+      "feature": 2.0,
+      "actual_distance": 185.0,
+      "predicted_distance": 191.98543689320388,
+      "residual": -6.985436893203882,
+      "video": "https://tv.cmas.org/sportitem/68234fc9a298818ef67e4329?currenttime=8581.24"
+    },
+    {
+      "name": "MILOSIC Boris",
+      "event": "DNF",
+      "feature": 2.0,
+      "actual_distance": 182.0,
+      "predicted_distance": 191.98543689320388,
+      "residual": -9.985436893203882,
+      "video": "https://tv.cmas.org/sportitem/68234fc9a298818ef67e4329?currenttime=8942.05"
+    },
+    {
+      "name": "BOCHENEK Michal",
+      "event": "DNF",
+      "feature": 1.0,
+      "actual_distance": 180.5,
+      "predicted_distance": 190.47330097087382,
+      "residual": -9.973300970873822,
+      "video": "https://tv.cmas.org/sportitem/68234fc9a298818ef67e4329?currenttime=6649.914619"
+    },
+    {
+      "name": "SOPRONYI Andras",
+      "event": "DNF",
+      "feature": 1.0,
+      "actual_distance": 180.5,
+      "predicted_distance": 190.47330097087382,
+      "residual": -9.973300970873822,
+      "video": "https://tv.cmas.org/sportitem/68234fc9a298818ef67e4329?currenttime=7254.23"
+    },
+    {
+      "name": "RULAND Fernando",
+      "event": "DNF",
+      "feature": 1.0,
+      "actual_distance": 175.5,
+      "predicted_distance": 190.47330097087382,
+      "residual": -14.973300970873822,
+      "video": "https://tv.cmas.org/sportitem/68234fc9a298818ef67e4329?currenttime=6060.311476"
+    },
+    {
+      "name": "MAKSIMOV Aleksandr",
+      "event": "DNF",
+      "feature": 1.0,
+      "actual_distance": 175.5,
+      "predicted_distance": 190.47330097087382,
+      "residual": -14.973300970873822,
+      "video": "https://tv.cmas.org/sportitem/68234fc9a298818ef67e4329?currenttime=7558.04"
+    },
+    {
+      "name": "DE WET Anton",
+      "event": "DNF",
+      "feature": 1.0,
+      "actual_distance": 168.0,
+      "predicted_distance": 190.47330097087382,
+      "residual": -22.473300970873822,
+      "video": "https://tv.cmas.org/sportitem/68234fc9a298818ef67e4329?currenttime=4856.78"
+    },
+    {
+      "name": "GENERALI Mauro",
+      "event": "DNF",
+      "feature": 3.0,
+      "actual_distance": 167.0,
+      "predicted_distance": 193.49757281553397,
+      "residual": -26.49757281553397,
+      "video": "https://tv.cmas.org/sportitem/68234fc9a298818ef67e4329?currenttime=7852.04"
+    },
+    {
+      "name": "NYMO Carl-Oscar",
+      "event": "DNF",
+      "feature": 1.0,
+      "actual_distance": 165.0,
+      "predicted_distance": 190.47330097087382,
+      "residual": -25.473300970873822,
+      "video": "https://tv.cmas.org/sportitem/68234fc9a298818ef67e4329?currenttime=5757.83253"
+    },
+    {
+      "name": "KIM Hakyong",
+      "event": "DNF",
+      "feature": 1.0,
+      "actual_distance": 164.0,
+      "predicted_distance": 190.47330097087382,
+      "residual": -26.473300970873822,
+      "video": "https://tv.cmas.org/sportitem/68234fc9a298818ef67e4329?currenttime=6649.914619"
+    },
+    {
+      "name": "SADAN Valentin",
+      "event": "DNF",
+      "feature": 0.0,
+      "actual_distance": 132.0,
+      "predicted_distance": 188.96116504854373,
+      "residual": -56.961165048543734,
+      "video": "https://tv.cmas.org/sportitem/68234fc9a298818ef67e4329?currenttime=3900.93"
+    }
+  ],
+  "DYNB": [
+    {
+      "name": "MALINA Mateusz",
+      "event": "DYNB",
+      "feature": 147.0,
+      "actual_distance": 300.0,
+      "predicted_distance": 242.00354531353872,
+      "residual": 57.99645468646128,
+      "video": "https://tv.cmas.org/sportitem/68235031f465e0724b3b9fa8?currenttime=20821.434668"
+    },
+    {
+      "name": "CHAN Kai-Hsiang",
+      "event": "DYNB",
+      "feature": 81.0,
+      "actual_distance": 150.0,
+      "predicted_distance": 196.3477361695842,
+      "residual": -46.34773616958421,
+      "video": "https://tv.cmas.org/sportitem/68235031f465e0724b3b9fa8?currenttime=19503.425274"
+    },
+    {
+      "name": "BOURDILA Guillaume",
+      "event": "DYNB",
+      "feature": 121.0,
+      "actual_distance": 284.0,
+      "predicted_distance": 224.01792352955664,
+      "residual": 59.98207647044336,
+      "video": "https://tv.cmas.org/sportitem/68235031f465e0724b3b9fa8?currenttime=16616.056437"
+    },
+    {
+      "name": "QUESADA Francisco",
+      "event": "DYNB",
+      "feature": 140.0,
+      "actual_distance": 231.0,
+      "predicted_distance": 237.16126252554358,
+      "residual": -6.161262525543577,
+      "video": "https://tv.cmas.org/sportitem/68235031f465e0724b3b9fa8?currenttime=16616.056437"
+    },
+    {
+      "name": "PELES Vanja",
+      "event": "DYNB",
+      "feature": 72.0,
+      "actual_distance": 157.0,
+      "predicted_distance": 190.12194401359042,
+      "residual": -33.12194401359042,
+      "video": "https://tv.cmas.org/sportitem/68235031f465e0724b3b9fa8?currenttime=19503.425274"
+    },
+    {
+      "name": "CERIMAGIC Enes",
+      "event": "DYNB",
+      "feature": 77.0,
+      "actual_distance": 150.0,
+      "predicted_distance": 193.58071743358698,
+      "residual": -43.58071743358698,
+      "video": "https://tv.cmas.org/sportitem/68235031f465e0724b3b9fa8?currenttime=18448.20048"
+    },
+    {
+      "name": "PAVKOVIC Nenad",
+      "event": "DYNB",
+      "feature": 94.0,
+      "actual_distance": 243.0,
+      "predicted_distance": 205.34054706157525,
+      "residual": 37.65945293842475,
+      "video": "https://tv.cmas.org/sportitem/68235031f465e0724b3b9fa8?currenttime=17728.437598"
+    },
+    {
+      "name": "BRIANTSEV Mikhail",
+      "event": "DYNB",
+      "feature": 99.0,
+      "actual_distance": 243.0,
+      "predicted_distance": 208.7993204815718,
+      "residual": 34.20067951842819,
+      "video": "https://tv.cmas.org/sportitem/68235031f465e0724b3b9fa8?currenttime=20368.279456"
+    },
+    {
+      "name": "LEE Po-Yen",
+      "event": "DYNB",
+      "feature": 136.0,
+      "actual_distance": 257.0,
+      "predicted_distance": 234.3942437895463,
+      "residual": 22.605756210453706,
+      "video": "https://tv.cmas.org/sportitem/68235031f465e0724b3b9fa8?currenttime=19957.676901"
+    },
+    {
+      "name": "MILOSIC Boris",
+      "event": "DYNB",
+      "feature": 156.0,
+      "actual_distance": 204.0,
+      "predicted_distance": 248.22933746953254,
+      "residual": -44.22933746953254,
+      "video": "https://tv.cmas.org/sportitem/68235031f465e0724b3b9fa8?currenttime=18080.16821"
+    },
+    {
+      "name": "BOCHENEK Michal",
+      "event": "DYNB",
+      "feature": 120.0,
+      "actual_distance": 250.0,
+      "predicted_distance": 223.32616884555733,
+      "residual": 26.673831154442667,
+      "video": "https://tv.cmas.org/sportitem/68235031f465e0724b3b9fa8?currenttime=18080.16821"
+    },
+    {
+      "name": "SOPRONYI Andras",
+      "event": "DYNB",
+      "feature": 105.0,
+      "actual_distance": 222.0,
+      "predicted_distance": 212.94984858556768,
+      "residual": 9.050151414432321,
+      "video": "https://tv.cmas.org/sportitem/68235031f465e0724b3b9fa8?currenttime=17000.872018"
+    },
+    {
+      "name": "MAKSIMOV Aleksandr",
+      "event": "DYNB",
+      "feature": 107.0,
+      "actual_distance": 248.0,
+      "predicted_distance": 214.3333579535663,
+      "residual": 33.66664204643371,
+      "video": "https://tv.cmas.org/sportitem/68235031f465e0724b3b9fa8?currenttime=17728.437598"
+    },
+    {
+      "name": "DE WET Anton",
+      "event": "DYNB",
+      "feature": 118.0,
+      "actual_distance": 215.0,
+      "predicted_distance": 221.94265947755872,
+      "residual": -6.9426594775587205,
+      "video": "https://tv.cmas.org/sportitem/68235031f465e0724b3b9fa8?currenttime=14241.224367"
+    },
+    {
+      "name": "GENERALI Mauro",
+      "event": "DYNB",
+      "feature": 205.0,
+      "actual_distance": 282.0,
+      "predicted_distance": 282.1253169854988,
+      "residual": -0.12531698549878456,
+      "video": "https://tv.cmas.org/sportitem/68235031f465e0724b3b9fa8?currenttime=20368.279456"
+    },
+    {
+      "name": "NYMO Carl-Oscar",
+      "event": "DYNB",
+      "feature": 168.0,
+      "actual_distance": 178.0,
+      "predicted_distance": 256.5303936775243,
+      "residual": -78.53039367752427,
+      "video": "https://tv.cmas.org/sportitem/68235031f465e0724b3b9fa8?currenttime=11579.371672"
+    },
+    {
+      "name": "KIM Hakyong",
+      "event": "DYNB",
+      "feature": 150.0,
+      "actual_distance": 250.0,
+      "predicted_distance": 244.07880936553667,
+      "residual": 5.921190634463329,
+      "video": "https://tv.cmas.org/sportitem/68235031f465e0724b3b9fa8?currenttime=17728.437598"
+    },
+    {
+      "name": "SADAN Valentin",
+      "event": "DYNB",
+      "feature": 109.0,
+      "actual_distance": 187.0,
+      "predicted_distance": 215.7168673215649,
+      "residual": -28.716867321564905,
+      "video": "https://tv.cmas.org/sportitem/68235031f465e0724b3b9fa8?currenttime=13643.956864"
+    }
+  ]
+}

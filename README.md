@@ -103,3 +103,26 @@ Run unit tests:
 ```shell
 pytest
 ```
+
+## Interactive Dashboards
+
+Generate the JSON payloads that power the D3 dashboards:
+
+```shell
+python scripts/build_dashboard_data.py
+```
+
+Serve the repository root (so the pages can load both the CSV sources and generated JSON) and open `web/index.html` in a
+browser:
+
+```shell
+python -m http.server 8000
+# visit http://localhost:8000/web/index.html
+```
+
+Available views:
+
+- **Exploratory Analysis** loads `DNF.csv`/`DYNB.csv` directly with D3 for quick histograms and scatter plots.
+- **Model Playground** renders the baseline regression parameters plus an interactive slider to probe predictions.
+- **Inference Viewer** plots residuals from the model application and includes a form for experimenting with your own
+  stroke/kick counts.

@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Exploratory Analysis · Apnea Energy</title>
+    <link rel="stylesheet" href="./styles.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/gridjs/dist/theme/mermaid.min.css" />
+  </head>
+  <body>
+    <nav>
+      <a href="./index.html">Home</a>
+      <a href="./exploration.html" aria-current="page">Exploratory Analysis</a>
+      <a href="./model.html">Model Playground</a>
+      <a href="./inference.html">Inference Viewer</a>
+    </nav>
+    <main>
+      <section>
+        <h1>Exploratory Analysis</h1>
+        <p>Pick a dataset to populate the interactive preview table and distance vs time plot.</p>
+        <div class="controls">
+          <label>
+            Dataset
+            <select id="datasetSelect"></select>
+          </label>
+        </div>
+      </section>
+
+      <details id="timePanel">
+        <summary>Time &amp; Splits</summary>
+        <div class="table-container">
+          <div id="timeTable" class="preview-table"></div>
+        </div>
+      </details>
+
+      <section>
+        <h2>Distance vs Time</h2>
+        <p>
+          Each athlete is plotted as a colored line using the recorded splits (T50, T100, …) and finishing time. Hover over
+          the lines to see the progression and reference trend line.
+        </p>
+        <div id="distanceTimeChart" class="chart"></div>
+        <div id="distanceTimeLegend" class="legend"></div>
+      </section>
+
+      <details id="techniquePanel">
+        <summary>Technique &amp; Kicks</summary>
+        <div class="table-container">
+          <div id="techniqueTable" class="preview-table"></div>
+        </div>
+      </details>
+    </main>
+    <script type="module" src="./js/exploration.js"></script>
+  </body>
+</html>

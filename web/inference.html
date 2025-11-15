@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Inference Viewer · Apnea Energy</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <nav>
+      <a href="./index.html">Home</a>
+      <a href="./exploration.html">Exploratory Analysis</a>
+      <a href="./model.html">Model Playground</a>
+      <a href="./inference.html">Inference Viewer</a>
+    </nav>
+    <main>
+      <section>
+        <h1>Inference Viewer</h1>
+        <p>
+          Each row below comes from applying the fitted baseline regressions to the competition data. Compare predicted vs
+          actual distances, highlight the biggest over/under-performers, and plug in your own data to gauge expected
+          outcomes.
+        </p>
+        <div class="controls">
+          <label>
+            Dataset
+            <select id="inferenceDataset"></select>
+          </label>
+          <label>
+            Sort residuals by
+            <select id="residualMode">
+              <option value="signed">Signed residual (actual - predicted)</option>
+              <option value="absolute">Absolute residual</option>
+            </select>
+          </label>
+        </div>
+      </section>
+
+      <section>
+        <h2>Residual Chart</h2>
+        <div id="residualChart" class="chart"></div>
+      </section>
+
+      <section>
+        <h2>Top Residuals</h2>
+        <div class="table-container">
+          <table id="residualTable"></table>
+        </div>
+      </section>
+
+      <section>
+        <h2>Predict Your Swim</h2>
+        <form id="predictionForm">
+          <div class="field-group">
+            <label> Athlete name <input type="text" id="athleteName" placeholder="Your name" /> </label>
+          </div>
+          <div class="field-group">
+            <label>
+              Dataset
+              <select id="formDataset">
+                <option value="DNF">DNF</option>
+                <option value="DYNB">DYNB</option>
+              </select>
+            </label>
+          </div>
+          <div class="field-group">
+            <label>
+              Strokes / Kicks
+              <input type="number" id="formFeature" min="0" step="1" required />
+            </label>
+          </div>
+          <div class="field-group">
+            <label>
+              Notes
+              <input type="text" id="formNotes" placeholder="Fin stiffness, pacing, etc." />
+            </label>
+          </div>
+          <button type="submit">Predict outcome</button>
+        </form>
+        <div id="customPrediction" class="alert"></div>
+      </section>
+    </main>
+    <script type="module" src="./js/inference.js"></script>
+  </body>
+</html>

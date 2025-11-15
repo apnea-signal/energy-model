@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Model Playground · Apnea Energy</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <nav>
+      <a href="./index.html">Home</a>
+      <a href="./exploration.html">Exploratory Analysis</a>
+      <a href="./model.html">Model Playground</a>
+      <a href="./inference.html">Inference Viewer</a>
+    </nav>
+    <main>
+      <section>
+        <h1>Model Playground</h1>
+        <p>
+          These charts use the JSON payload produced by <code>scripts/build_dashboard_data.py</code>. Experiment with the
+          baseline regression by sliding the stroke/kick count and compare the predictions to the observed data.
+        </p>
+        <div class="controls">
+          <label>
+            Dataset
+            <select id="modelDataset"></select>
+          </label>
+          <label>
+            Strokes / Kicks
+            <input type="range" id="featureSlider" min="0" max="250" step="1" />
+          </label>
+          <label>
+            Manual override
+            <input type="number" id="featureInput" min="0" step="1" />
+          </label>
+        </div>
+        <div id="predictionSummary" class="alert"></div>
+      </section>
+
+      <section>
+        <h2>Regression Fit</h2>
+        <div id="modelMetrics" class="summary-list"></div>
+        <div id="modelChart" class="chart"></div>
+      </section>
+    </main>
+    <script type="module" src="./js/model_playground.js"></script>
+  </body>
+</html>
