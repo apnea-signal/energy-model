@@ -86,8 +86,8 @@ function renderGridTable(columns, container, type) {
     columns: columnDefs,
     data,
     sort: true,
-    search: true,
-    pagination: { enabled: true, limit: 12 },
+    search: false,
+    pagination: false,
     resizable: true,
     className: {
       table: "preview-grid",
@@ -207,45 +207,75 @@ function renderDistanceTimeChart() {
     .append("title")
     .text((d) => `${d.name}: ${d.distance} m @ ${formatSeconds(d.time)}`);
 
-  renderRegressionLine(svg, trajectories, x, y);
+  renderAverageSplitLine(svg, x, y);
   renderLegend(trajectories, color);
 }
 
-function renderRegressionLine(svg, trajectories, x, y) {
-  const finals = trajectories
-    .map((athlete) => athlete.points[athlete.points.length - 1])
-    .filter((point) => Number.isFinite(point.distance) && Number.isFinite(point.time));
-  if (finals.length < 2) {
+function renderAverageSplitLine(svg, x, y) {
+  const points = computeAverageSplitTimes();
+  if (points.length < 2) {
     return;
   }
-  const { slope, intercept } = linearRegression(finals);
-  const xDomain = d3.extent(finals, (d) => d.distance);
-  if (!xDomain || xDomain.some((value) => !Number.isFinite(value))) {
-    return;
-  }
-  const linePoints = [
-    { distance: xDomain[0], time: slope * xDomain[0] + intercept },
-    { distance: xDomain[1], time: slope * xDomain[1] + intercept },
-  ];
-  const regressionLine = d3
+
+  const line = d3
     .line()
     .x((d) => x(d.distance))
     .y((d) => y(d.time));
 
   svg
     .append("path")
-    .datum(linePoints)
+    .datum(points)
     .attr("fill", "none")
     .attr("stroke", "#0f172a")
     .attr("stroke-dasharray", "6 4")
     .attr("stroke-width", 2)
-    .attr("d", regressionLine);
+    .attr("opacity", 0.9)
+    .attr("d", line);
+
+  svg
+    .selectAll(".avg-point")
+    .data(points)
+    .enter()
+    .append("circle")
+    .attr("class", "avg-point")
+    .attr("cx", (d) => x(d.distance))
+    .attr("cy", (d) => y(d.time))
+    .attr("r", 4)
+    .attr("fill", "#0f172a")
+    .append("title")
+    .text((d) => `Avg ${d.distance} m @ ${formatSeconds(d.time)}`);
+
+  const labels = svg
+    .selectAll(".avg-label")
+    .data(points)
+    .enter()
+    .append("g")
+    .attr("class", "avg-label")
+    .attr("transform", (d) => `translate(${x(d.distance) + 6}, ${y(d.time) - 10})`);
+
+  labels
+    .append("rect")
+    .attr("rx", 4)
+    .attr("ry", 4)
+    .attr("width", (d) => labelWidth(formatSeconds(d.time)))
+    .attr("height", 16)
+    .attr("fill", "rgba(15, 23, 42, 0.85)")
+    .attr("stroke", "#fff")
+    .attr("stroke-width", 1);
+
+  labels
+    .append("text")
+    .attr("x", 4)
+    .attr("y", 11)
+    .attr("fill", "#fff")
+    .attr("font-size", "10px")
+    .text((d) => formatSeconds(d.time));
 }
 
 function renderLegend(trajectories, color) {
   const items = legendEl
     .selectAll("div")
-    .data(trajectories.slice(0, 20))
+    .data(trajectories)
     .enter()
     .append("div")
     .attr("class", "legend-item");
@@ -410,14 +440,35 @@ function getSplitDistances() {
     .sort((a, b) => a - b);
 }
 
-function linearRegression(points) {
-  const n = points.length;
-  const sumX = d3.sum(points, (d) => d.distance);
-  const sumY = d3.sum(points, (d) => d.time);
-  const sumXY = d3.sum(points, (d) => d.distance * d.time);
-  const sumX2 = d3.sum(points, (d) => d.distance ** 2);
-  const denominator = n * sumX2 - sumX ** 2;
-  const slope = denominator ? (n * sumXY - sumX * sumY) / denominator : 0;
-  const intercept = n ? sumY / n - slope * (sumX / n) : 0;
-  return { slope, intercept };
+function computeAverageSplitTimes() {
+  const splitDistances = getSplitDistances();
+  const points = [{ distance: 0, time: 0 }];
+
+  splitDistances.forEach((distance) => {
+    const times = state.data
+      .map((row) => parseTimeToSeconds(row[`T${distance}`]))
+      .filter((value) => Number.isFinite(value));
+    if (times.length) {
+      points.push({ distance, time: d3.mean(times) });
+    }
+  });
+
+  if (points.length >= 2) {
+    const last = points[points.length - 1];
+    const prev = points[points.length - 2];
+    const targetDistance = 250;
+    if (last.distance < targetDistance) {
+      const slope = (last.time - prev.time) / (last.distance - prev.distance || 1);
+      const extrapolatedTime = last.time + slope * (targetDistance - last.distance);
+      points.push({ distance: targetDistance, time: extrapolatedTime });
+    }
+  }
+
+  return points;
+}
+
+function labelWidth(text) {
+  const padding = 8;
+  const charWidth = 6;
+  return Math.max(32, padding + text.length * charWidth);
 }
