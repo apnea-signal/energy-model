@@ -5,9 +5,10 @@ from __future__ import annotations
 import argparse
 import json
 import math
+import subprocess
 import sys
 from pathlib import Path
-from typing import Dict, Iterable
+from typing import Dict, Iterable, List, Sequence
 
 import numpy as np
 import pandas as pd
@@ -56,6 +57,11 @@ def parse_args() -> argparse.Namespace:
         type=Path,
         default=PROJECT_ROOT / "data" / "derived" / "weighted_split_stats.json",
         help="Optional JSON file with weighted split summaries (output of build_split_stats.py).",
+    )
+    parser.add_argument(
+        "--skip-dependencies",
+        action="store_true",
+        help="Skip running other builder scripts before creating dashboard payloads.",
     )
     return parser.parse_args()
 
@@ -137,6 +143,11 @@ def build_payloads(
 
 def main() -> None:
     args = parse_args()
+    run_dependency_scripts(
+        data_root=args.data_root,
+        split_stats_output=args.split_stats,
+        skip=args.skip_dependencies,
+    )
     frames = load_competition_data(args.data_root)
     features = {"DNF": args.dnf_feature, "DYNB": args.dynb_feature}
 
@@ -156,6 +167,29 @@ def main() -> None:
 
     print(f"Wrote model params to {model_path}")
     print(f"Wrote inference payload to {inference_path}")
+
+
+def run_dependency_scripts(data_root: Path, split_stats_output: Path, skip: bool) -> None:
+    if skip:
+        return
+
+    entries: List[tuple[Path, Sequence[str]]] = [
+        (
+            PROJECT_ROOT / "scripts" / "build_split_stats.py",
+            ("--data-root", str(data_root), "--output", str(split_stats_output)),
+        ),
+        (
+            PROJECT_ROOT / "scripts" / "build_dnf_style.py",
+            ("--data-root", str(data_root),),
+        ),
+    ]
+
+    for script_path, extra_args in entries:
+        if not script_path.exists():
+            continue
+        cmd = [sys.executable, str(script_path), *extra_args]
+        print(f"Running {script_path.name} ...", flush=True)
+        subprocess.run(cmd, check=True)
 
 
 def load_split_stats(path: Path) -> dict | None:
