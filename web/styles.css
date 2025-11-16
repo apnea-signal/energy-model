@@ -200,6 +200,132 @@ button:disabled {
   gap: 0.35rem;
 }
 
+.summary-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 0.85rem;
+  margin-top: 1rem;
+}
+
+.summary-card {
+  border: 1px solid #e2e8f0;
+  border-radius: 0.6rem;
+  padding: 0.9rem;
+  background: #f8fafc;
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.summary-title {
+  margin: 0;
+  font-size: 0.85rem;
+  color: #475569;
+}
+
+.summary-value {
+  font-size: 1.3rem;
+  color: #0f172a;
+}
+
+.summary-detail {
+  font-size: 0.85rem;
+  color: #475569;
+}
+
+.table-scroll {
+  overflow-x: auto;
+}
+
+.split-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+}
+
+.split-table th,
+.split-table td {
+  padding: 0.4rem 0.55rem;
+  border-bottom: 1px solid #e2e8f0;
+  text-align: left;
+}
+
+.split-table thead {
+  background: #f1f5f9;
+  position: sticky;
+  top: 0;
+  z-index: 1;
+}
+
+.component-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.component-item {
+  display: grid;
+  grid-template-columns: 110px 1fr auto;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.component-label {
+  text-transform: capitalize;
+  font-size: 0.85rem;
+  color: #475569;
+}
+
+.component-detail {
+  font-size: 0.8rem;
+  color: #0f172a;
+}
+
+.bar-track {
+  position: relative;
+  height: 8px;
+  background: #e2e8f0;
+  border-radius: 999px;
+}
+
+.bar-fill {
+  height: 100%;
+  border-radius: 999px;
+  background: #38bdf8;
+}
+
+.bar-fill.surplus {
+  background: #22c55e;
+}
+
+.component-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 0.8rem;
+}
+
+.component-card {
+  border: 1px solid #e2e8f0;
+  padding: 0.75rem;
+  border-radius: 0.5rem;
+  background: #f8fafc;
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.parameter-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.parameter-table td {
+  padding: 0.35rem 0.5rem;
+  border-bottom: 1px solid #e2e8f0;
+  font-size: 0.85rem;
+  color: #0f172a;
+}
+
 .legend-swatch {
   width: 12px;
   height: 12px;

@@ -6,7 +6,7 @@ import argparse
 import json
 import math
 from pathlib import Path
-from typing import Any, Dict, Iterable, List
+from typing import Any, Dict, Iterable, List, Tuple
 
 import pandas as pd
 
@@ -65,7 +65,8 @@ def build_attempt_payload(record: Dict[str, Any]) -> Dict[str, Any]:
     st_wk = to_float(record.get("ST_WK")) or 0.0
     st_dk = to_float(record.get("ST_DK")) or 0.0
 
-    split_details = list(compute_split_details(record, dist, st_k, st_wk, st_dk))
+    time_map, total_time = build_time_metadata(record)
+    split_details = list(compute_split_details(record, dist, st_k, st_wk, st_dk, time_map, total_time))
     wall_pushes = len(split_details)
 
     total_leg_kicks = None
@@ -91,7 +92,13 @@ def build_attempt_payload(record: Dict[str, Any]) -> Dict[str, Any]:
 
 
 def compute_split_details(
-    record: Dict[str, Any], dist: float | None, st_k: float, st_wk: float, st_dk: float
+    record: Dict[str, Any],
+    dist: float | None,
+    st_k: float,
+    st_wk: float,
+    st_dk: float,
+    time_map: Dict[int, float],
+    total_time: float | None,
 ) -> Iterable[Dict[str, Any]]:
     if dist is None or dist <= 0:
         return []
@@ -99,6 +106,7 @@ def compute_split_details(
     split_payloads: List[Dict[str, Any]] = []
     previous_distance = 0.0
     cumulative_arm_cycles = 0.0
+    previous_time = 0.0
 
     for index, split_distance in enumerate(SEGMENT_DISTANCES):
         if dist <= previous_distance:
@@ -114,6 +122,17 @@ def compute_split_details(
         arm_cycles = to_float(record.get(column))
         used_cycles = arm_cycles if arm_cycles is not None else 0.0
         cumulative_arm_cycles += used_cycles
+
+        cumulative_time = time_map.get(split_distance)
+        if cumulative_time is None and segment_end < split_distance:
+            cumulative_time = total_time
+        segment_time = None
+        pace = None
+        if cumulative_time is not None and cumulative_time >= previous_time:
+            segment_time = cumulative_time - previous_time
+            if segment_time > 0:
+                pace = segment_length / segment_time
+            previous_time = cumulative_time
 
         stroke_leg_kicks = st_k * arm_cycles if arm_cycles is not None else None
         dolphin_kicks = st_dk * arm_cycles if arm_cycles is not None else None
@@ -135,6 +154,9 @@ def compute_split_details(
                 "wall_kicks": wall_kicks,
                 "total_leg_kicks": add_optional(stroke_leg_kicks, wall_kicks),
                 "dolphin_kicks": dolphin_kicks,
+                "cumulative_time_s": cumulative_time,
+                "segment_time_s": segment_time,
+                "segment_pace_mps": pace,
                 "cumulative_arm_cycles": cumulative_arm_cycles,
                 "cumulative_stroke_leg_kicks": cumulative_stroke_leg_kicks,
                 "cumulative_wall_kicks": cumulative_wall_kicks,
@@ -146,6 +168,16 @@ def compute_split_details(
         previous_distance = segment_end
 
     return split_payloads
+
+
+def build_time_metadata(record: Dict[str, Any]) -> Tuple[Dict[int, float], float | None]:
+    time_map: Dict[int, float] = {}
+    for distance in SEGMENT_DISTANCES:
+        time_value = parse_time_to_seconds(record.get(f"T{distance}"))
+        if time_value is not None:
+            time_map[distance] = time_value
+    total_time = parse_time_to_seconds(record.get("TT"))
+    return time_map, total_time
 
 
 def add_optional(primary: float | None, secondary: float | None) -> float | None:
@@ -167,6 +199,31 @@ def to_float(value: Any) -> float | None:
     if math.isnan(result):
         return None
     return result
+
+
+def parse_time_to_seconds(value: Any) -> float | None:
+    if value is None:
+        return None
+    if isinstance(value, (int, float)):
+        return float(value)
+    text = str(value).strip()
+    if not text or text in {"-", "--"}:
+        return None
+    parts = text.split(":")
+    try:
+        numbers = [float(part) for part in parts]
+    except ValueError:
+        return None
+    if len(numbers) == 3:
+        hours, minutes, seconds = numbers
+    elif len(numbers) == 2:
+        hours = 0.0
+        minutes, seconds = numbers
+    elif len(numbers) == 1:
+        return numbers[0]
+    else:
+        return None
+    return hours * 3600 + minutes * 60 + seconds
 
 
 if __name__ == "__main__":
