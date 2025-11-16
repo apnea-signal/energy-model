@@ -40,9 +40,7 @@ Object.keys(DATASETS).forEach((name) => {
 datasetSelect.value = state.dataset;
 datasetSelect.addEventListener("change", () => loadDataset(datasetSelect.value));
 athleteSelect.addEventListener("change", () => {
-  state.selectedAthlete = athleteSelect.value;
-  renderDistanceTimeChart();
-  renderSplitStats();
+  setSelectedAthlete(athleteSelect.value);
 });
 
 init();
@@ -109,6 +107,23 @@ async function loadModelParams() {
     MODEL_PARAMS = {};
     window.MODEL_PARAMS = MODEL_PARAMS;
   }
+}
+
+function setSelectedAthlete(name = "", options = {}) {
+  const { toggle = false } = options;
+  let nextSelection = name || "";
+  if (toggle && nextSelection && state.selectedAthlete === nextSelection) {
+    nextSelection = "";
+  }
+  if (athleteSelect) {
+    athleteSelect.value = nextSelection;
+  }
+  if (state.selectedAthlete === nextSelection) {
+    return;
+  }
+  state.selectedAthlete = nextSelection;
+  renderDistanceTimeChart();
+  renderSplitStats();
 }
 
 function populateAthleteSelect() {
@@ -251,7 +266,8 @@ function renderDistanceTimeChart() {
   const allPoints = trajectories.flatMap((athlete) => athlete.points);
   const splitDistances = getSplitDistances();
 
-  const width = distanceTimeEl.node().clientWidth || 900;
+  const containerNode = distanceTimeEl.node();
+  const width = containerNode?.clientWidth || 900;
   const height = 420;
   const margins = { top: 20, right: 30, bottom: 60, left: 80 };
 
@@ -267,6 +283,7 @@ function renderDistanceTimeChart() {
     .range([height - margins.bottom, margins.top]);
 
   const svg = distanceTimeEl.append("svg").attr("viewBox", `0 0 ${width} ${height}`);
+  const distanceTooltip = createChartTooltip(distanceTimeEl);
 
   if (splitDistances.length) {
     svg
@@ -343,8 +360,30 @@ function renderDistanceTimeChart() {
     .attr("cy", (d) => y(d.time))
     .attr("r", (d) => (highlightActive && d.name !== selected ? 2 : 3))
     .attr("opacity", (d) => (highlightActive && d.name !== selected ? 0.3 : 1))
+    .on("mouseenter", (event, d) => {
+      if (!distanceTooltip) {
+        return;
+      }
+      distanceTooltip.show(event, `<strong>${d.name}</strong><div>${d.distance} m @ ${formatSeconds(d.time)}</div>`);
+    })
+    .on("mousemove", (event) => {
+      distanceTooltip?.move(event);
+    })
+    .on("mouseleave", () => {
+      distanceTooltip?.hide();
+    })
+    .on("click", (event, d) => {
+      setSelectedAthlete(d.name, { toggle: true });
+      event.stopPropagation();
+    })
     .append("title")
     .text((d) => `${d.name}: ${d.distance} m @ ${formatSeconds(d.time)}`);
+
+  svg.on("click", () => {
+    if (state.selectedAthlete) {
+      setSelectedAthlete("", { toggle: false });
+    }
+  });
 
   renderSelectedLabels(svg, trajectories, x, y);
   renderLegend(trajectories, color);
@@ -401,56 +440,6 @@ function renderStaCorrelationChart() {
 
   const width = containerNode.clientWidth || 900;
   const height = 360;
-  const tooltip = staChartEl
-    .append("div")
-    .attr("class", "chart-tooltip")
-    .style("opacity", 0)
-    .style("visibility", "hidden");
-
-  // Tooltip overlay to expose the athlete and PB context on hover.
-
-  const offset = 12;
-  const moveStaTooltip = (event) => {
-    const [xPos, yPos] = d3.pointer(event, containerNode);
-    const tooltipNode = tooltip.node();
-    if (!tooltipNode) {
-      return;
-    }
-    const tooltipWidth = tooltipNode.offsetWidth;
-    const tooltipHeight = tooltipNode.offsetHeight;
-    const containerWidth = containerNode.clientWidth;
-    const containerHeight = containerNode.clientHeight || height;
-    let left = xPos + offset;
-    let top = yPos - tooltipHeight - offset;
-
-    if (left + tooltipWidth > containerWidth - offset) {
-      left = containerWidth - tooltipWidth - offset;
-    }
-    if (left < offset) {
-      left = offset;
-    }
-    if (top < offset) {
-      top = yPos + offset;
-    }
-    if (top + tooltipHeight > containerHeight - offset) {
-      top = containerHeight - tooltipHeight - offset;
-    }
-
-    tooltip.style("transform", `translate(${left}px, ${top}px)`);
-  };
-
-  const showStaTooltip = (event, d) => {
-    const staLine = `STA ${d.staDisplay || "-"}${d.staYear ? ` (${d.staYear})` : ""}`;
-    tooltip
-      .style("visibility", "visible")
-      .style("opacity", 1)
-      .html(`<strong>${d.name}</strong><div>${staLine}</div><div>${d.distance} m ${state.dataset}</div>`);
-    moveStaTooltip(event);
-  };
-
-  const hideStaTooltip = () => {
-    tooltip.style("opacity", 0).style("visibility", "hidden").style("transform", "translate(-9999px, -9999px)");
-  };
   const margins = { top: 20, right: 30, bottom: 60, left: 80 };
   const [minSta, maxSta] = d3.extent(points, (d) => d.staSeconds);
   const maxDistance = d3.max(points, (d) => d.distance) || 0;
@@ -476,6 +465,7 @@ function renderStaCorrelationChart() {
     .range([height - margins.bottom, margins.top]);
 
   const svg = staChartEl.append("svg").attr("viewBox", `0 0 ${width} ${height}`);
+  const staTooltip = createChartTooltip(staChartEl);
 
   svg
     .append("g")
@@ -517,13 +507,17 @@ function renderStaCorrelationChart() {
 
   circles
     .on("mouseenter", (event, d) => {
-      showStaTooltip(event, d);
+      if (!staTooltip) {
+        return;
+      }
+      const staLine = `STA ${d.staDisplay || "-"}${d.staYear ? ` (${d.staYear})` : ""}`;
+      staTooltip.show(event, `<strong>${d.name}</strong><div>${staLine}</div><div>${d.distance} m ${state.dataset}</div>`);
     })
     .on("mousemove", (event) => {
-      moveStaTooltip(event);
+      staTooltip?.move(event);
     })
     .on("mouseleave", () => {
-      hideStaTooltip();
+      staTooltip?.hide();
     })
     .append("title")
     .text(
@@ -678,6 +672,61 @@ function interpolateStaBandValue(seconds, key) {
   return null;
 }
 
+function createChartTooltip(containerSelection) {
+  if (!containerSelection || !containerSelection.node || !containerSelection.node()) {
+    return null;
+  }
+  const containerNode = containerSelection.node();
+  const tooltip = containerSelection
+    .append("div")
+    .attr("class", "chart-tooltip")
+    .style("opacity", 0)
+    .style("visibility", "hidden");
+
+  const offset = 12;
+  const reposition = (event) => {
+    const [xPos, yPos] = d3.pointer(event, containerNode);
+    const tooltipNode = tooltip.node();
+    if (!tooltipNode) {
+      return;
+    }
+    const tooltipWidth = tooltipNode.offsetWidth || 0;
+    const tooltipHeight = tooltipNode.offsetHeight || 0;
+    const { width: containerWidth = tooltipWidth, height: containerHeight = tooltipHeight } =
+      containerNode.getBoundingClientRect();
+    let left = xPos + offset;
+    let top = yPos - tooltipHeight - offset;
+
+    if (left + tooltipWidth > containerWidth - offset) {
+      left = containerWidth - tooltipWidth - offset;
+    }
+    if (left < offset) {
+      left = offset;
+    }
+    if (top < offset) {
+      top = yPos + offset;
+    }
+    if (top + tooltipHeight > containerHeight - offset) {
+      top = containerHeight - tooltipHeight - offset;
+    }
+
+    tooltip.style("transform", `translate(${left}px, ${top}px)`);
+  };
+
+  return {
+    show(event, html) {
+      tooltip.style("visibility", "visible").style("opacity", 1).html(html);
+      reposition(event);
+    },
+    move(event) {
+      reposition(event);
+    },
+    hide() {
+      tooltip.style("opacity", 0).style("visibility", "hidden").style("transform", "translate(-9999px, -9999px)");
+    },
+  };
+}
+
 function renderSplitStats() {
   noteShelfEl.innerHTML = "";
   const dataset = state.dataset;
@@ -777,14 +826,7 @@ function renderLegend(trajectories, color) {
   enter.merge(items).classed("selected", (d) => selected && d.name === selected);
 
   legendEl.selectAll(".legend-item").on("click", (event, d) => {
-    if (state.selectedAthlete === d.name) {
-      state.selectedAthlete = "";
-      athleteSelect.value = "";
-    } else {
-      state.selectedAthlete = d.name;
-      athleteSelect.value = d.name;
-    }
-    renderDistanceTimeChart();
+    setSelectedAthlete(d.name, { toggle: true });
   });
 }
 
