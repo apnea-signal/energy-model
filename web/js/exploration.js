@@ -16,6 +16,7 @@ const noteShelfEl = document.getElementById("splitStats");
 const athleteSelect = document.getElementById("athleteSelect");
 const staTableEl = document.getElementById("staTable");
 const staChartEl = d3.select("#staPerformanceChart");
+const staTrainingNoteEl = document.getElementById("staTrainingNote");
 
 const state = {
   dataset: "DNF",
@@ -353,14 +354,17 @@ function renderStaCorrelationChart() {
   if (!staChartEl || !staChartEl.node()) {
     return;
   }
+  const containerNode = staChartEl.node();
   staChartEl.selectAll("*").remove();
 
   if (!staRoster.length) {
     staChartEl.append("div").attr("class", "alert").text("STA PB data unavailable.");
+    renderStaTrainingNote([]);
     return;
   }
   if (!state.data.length) {
     staChartEl.append("div").attr("class", "alert").text("Load a dataset to see the correlation plot.");
+    renderStaTrainingNote([]);
     return;
   }
 
@@ -389,11 +393,64 @@ function renderStaCorrelationChart() {
       .append("div")
       .attr("class", "alert")
       .text("No overlapping athletes with STA PB values for this dataset.");
+    renderStaTrainingNote([]);
     return;
   }
 
-  const width = staChartEl.node().clientWidth || 900;
+  renderStaTrainingNote(points);
+
+  const width = containerNode.clientWidth || 900;
   const height = 360;
+  const tooltip = staChartEl
+    .append("div")
+    .attr("class", "chart-tooltip")
+    .style("opacity", 0)
+    .style("visibility", "hidden");
+
+  // Tooltip overlay to expose the athlete and PB context on hover.
+
+  const offset = 12;
+  const moveStaTooltip = (event) => {
+    const [xPos, yPos] = d3.pointer(event, containerNode);
+    const tooltipNode = tooltip.node();
+    if (!tooltipNode) {
+      return;
+    }
+    const tooltipWidth = tooltipNode.offsetWidth;
+    const tooltipHeight = tooltipNode.offsetHeight;
+    const containerWidth = containerNode.clientWidth;
+    const containerHeight = containerNode.clientHeight || height;
+    let left = xPos + offset;
+    let top = yPos - tooltipHeight - offset;
+
+    if (left + tooltipWidth > containerWidth - offset) {
+      left = containerWidth - tooltipWidth - offset;
+    }
+    if (left < offset) {
+      left = offset;
+    }
+    if (top < offset) {
+      top = yPos + offset;
+    }
+    if (top + tooltipHeight > containerHeight - offset) {
+      top = containerHeight - tooltipHeight - offset;
+    }
+
+    tooltip.style("transform", `translate(${left}px, ${top}px)`);
+  };
+
+  const showStaTooltip = (event, d) => {
+    const staLine = `STA ${d.staDisplay || "-"}${d.staYear ? ` (${d.staYear})` : ""}`;
+    tooltip
+      .style("visibility", "visible")
+      .style("opacity", 1)
+      .html(`<strong>${d.name}</strong><div>${staLine}</div><div>${d.distance} m ${state.dataset}</div>`);
+    moveStaTooltip(event);
+  };
+
+  const hideStaTooltip = () => {
+    tooltip.style("opacity", 0).style("visibility", "hidden").style("transform", "translate(-9999px, -9999px)");
+  };
   const margins = { top: 20, right: 30, bottom: 60, left: 80 };
   const [minSta, maxSta] = d3.extent(points, (d) => d.staSeconds);
   const maxDistance = d3.max(points, (d) => d.distance) || 0;
@@ -459,6 +516,15 @@ function renderStaCorrelationChart() {
     .attr("opacity", 0.9);
 
   circles
+    .on("mouseenter", (event, d) => {
+      showStaTooltip(event, d);
+    })
+    .on("mousemove", (event) => {
+      moveStaTooltip(event);
+    })
+    .on("mouseleave", () => {
+      hideStaTooltip();
+    })
     .append("title")
     .text(
       (d) => `${d.name}: STA ${d.staDisplay || "-"}${d.staYear ? ` (${d.staYear})` : ""} → ${d.distance} m ${state.dataset}`
@@ -501,6 +567,115 @@ function renderStaTrendBand(svg, xScale, yScale) {
     .attr("stroke-width", 1.5)
     .attr("stroke-dasharray", "6 4")
     .attr("d", line);
+}
+
+function renderStaTrainingNote(points) {
+  if (!staTrainingNoteEl) {
+    return;
+  }
+  staTrainingNoteEl.innerHTML = "";
+  const datasetPoints = Array.isArray(points) ? points : [];
+
+  const appendParagraph = (text, className = "") => {
+    const p = document.createElement("p");
+    p.textContent = text;
+    if (className) {
+      p.className = className;
+    }
+    staTrainingNoteEl.appendChild(p);
+  };
+
+  if (!staRoster.length || !state.data.length) {
+    appendParagraph("Load a dataset with STA PB entries to surface standout athletes.");
+    return;
+  }
+
+  const band = MODEL_PARAMS?.[state.dataset]?.sta_band;
+  if (!band?.samples?.length) {
+    appendParagraph(`${state.dataset}: STA projection band unavailable.`);
+    return;
+  }
+
+  const highlights = findStaHighPerformers(datasetPoints);
+  if (!highlights.length) {
+    appendParagraph(`${state.dataset}: No athletes are significantly above the STA projection right now.`);
+    return;
+  }
+
+  appendParagraph(`${state.dataset} STA efficiency targets`, "note-lede");
+  appendParagraph("These athletes outperform the STA-based upper band; review their technique cues:");
+
+  const list = document.createElement("dl");
+  highlights.forEach((athlete) => {
+    const dt = document.createElement("dt");
+    dt.textContent = athlete.name;
+    const staLabel = athlete.staDisplay
+      ? `STA ${athlete.staDisplay}${athlete.staYear ? ` (${athlete.staYear})` : ""}`
+      : "STA PB";
+    const delta = Math.round(athlete.delta);
+    const dd = document.createElement("dd");
+    dd.textContent = `${athlete.distance} m (${delta}+ m above band, ${staLabel})`;
+    list.appendChild(dt);
+    list.appendChild(dd);
+  });
+  staTrainingNoteEl.appendChild(list);
+}
+
+function findStaHighPerformers(points) {
+  const band = MODEL_PARAMS?.[state.dataset]?.sta_band;
+  if (!band?.samples?.length) {
+    return [];
+  }
+  const threshold = Math.max(5, Number(band.band_width || 0) * 0.25);
+  return points
+    .map((point) => {
+      const staYear = Number(point.staYear);
+      if (!Number.isFinite(staYear) || staYear < 2024) {
+        return null;
+      }
+      const upper = interpolateStaBandValue(point.staSeconds, "upper");
+      if (!Number.isFinite(upper)) {
+        return null;
+      }
+      const delta = point.distance - upper;
+      if (!Number.isFinite(delta)) {
+        return null;
+      }
+      return { ...point, delta };
+    })
+    .filter((entry) => entry && entry.delta >= threshold)
+    .sort((a, b) => b.delta - a.delta)
+    .slice(0, 5);
+}
+
+function interpolateStaBandValue(seconds, key) {
+  const band = MODEL_PARAMS?.[state.dataset]?.sta_band;
+  const samples = band?.samples;
+  if (!samples?.length) {
+    return null;
+  }
+  if (seconds <= samples[0].x) {
+    return samples[0]?.[key];
+  }
+  const last = samples[samples.length - 1];
+  if (seconds >= last.x) {
+    return last?.[key];
+  }
+  for (let i = 0; i < samples.length - 1; i += 1) {
+    const current = samples[i];
+    const next = samples[i + 1];
+    if (seconds >= current.x && seconds <= next.x) {
+      const span = next.x - current.x || 1;
+      const ratio = (seconds - current.x) / span;
+      const start = current?.[key];
+      const end = next?.[key];
+      if (!Number.isFinite(start) || !Number.isFinite(end)) {
+        return null;
+      }
+      return start + (end - start) * ratio;
+    }
+  }
+  return null;
 }
 
 function renderSplitStats() {
