@@ -168,3 +168,39 @@ calibrating to observed performances:
 All modifiers start at 1.0. Fitting them (alongside shared constants) lets the
 model adapt to athletes who generate more propulsion per stroke, rely heavily on
 wall kicks, or have unusually low static oxygen needs.
+
+## Fitting Workflow
+
+We will calibrate the model in two sequential passes:
+
+1. **Predict per-athlete modifiers**: generate candidate intensity multipliers
+   for every athlete, have them reviewed/approved, and then write the approved
+   values back into the annotated dataset.
+2. **Regress global parameters**: with modifiers locked in, fit the shared
+   propulsion and oxygen parameters (plus the arm/leg ratio) so the model tracks
+   the observed split distances and times.
+
+### Step 1: Proposing Athlete Intensities
+
+To suggest the initial intensity values we:
+
+- Focus on the first split (0–50 m) for each attempt, since it has the cleanest
+  kick/stroke counts and the least accumulated fatigue.
+- Assume the baseline mechanical work for that split is proportional to speed
+  (i.e., similar energy output scaled by \(v^2\) using the shared constant \(K_f\)).
+- Attach nominal energy costs to arm strokes vs. leg kicks (using the existing
+  per-movement coefficients).
+- For each athlete, regress the wall/arm/leg/dolphin intensity multipliers so
+  the modeled propulsion supply matches the required output for the first split.
+
+Those proposed intensity values (expressed as low/moderate/high scalars) are
+surfaced for manual approval. Once approved, they become part of the source
+dataset so downstream regression runs can treat them as fixed inputs.
+
+### Step 2: Global Regression
+
+With per-athlete intensities locked, we fit the shared parameters (e.g.,
+`leg_kick_force`, `arm_stroke_force`, anaerobic multipliers, and the arm/leg
+ratio \(r\)) so the model reproduces the full set of splits. Because the
+dataset consists of max attempts, the optimized parameters should leave minimal
+propulsion surplus by the end of each swim once oxygen is depleted.
