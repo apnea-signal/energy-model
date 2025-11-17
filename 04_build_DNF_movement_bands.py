@@ -33,12 +33,17 @@ class MovementSample:
     movement_intensity: float | None
     arm_work_total: float | None
     leg_work_total: float | None
+    leg_arm_work_ratio: float | None
 
     @property
     def work_bias(self) -> float | None:
+        if self.leg_arm_work_ratio is not None and math.isfinite(self.leg_arm_work_ratio):
+            return self.leg_arm_work_ratio
         if self.arm_work_total is None or self.leg_work_total is None:
             return None
-        return self.leg_work_total - self.arm_work_total
+        if self.arm_work_total == 0:
+            return None
+        return self.leg_work_total / self.arm_work_total
 
 
 @dataclass
@@ -148,6 +153,7 @@ def build_samples(frame: pd.DataFrame, movement_rows: List[dict]) -> List[Moveme
         movement_intensity = coerce_float(entry.get("movement_intensity"))
         arm_work_total = coerce_float(entry.get("arm_work_total"))
         leg_work_total = coerce_float(entry.get("leg_work_total"))
+        leg_arm_work_ratio = coerce_float(entry.get("leg_arm_work_ratio"))
         samples.append(
             MovementSample(
                 name=str(name),
@@ -155,6 +161,7 @@ def build_samples(frame: pd.DataFrame, movement_rows: List[dict]) -> List[Moveme
                 movement_intensity=movement_intensity if math.isfinite(movement_intensity) else None,
                 arm_work_total=arm_work_total if math.isfinite(arm_work_total) else None,
                 leg_work_total=leg_work_total if math.isfinite(leg_work_total) else None,
+                leg_arm_work_ratio=leg_arm_work_ratio if math.isfinite(leg_arm_work_ratio) else None,
             )
         )
     return samples

@@ -5,7 +5,7 @@ export function createMovementQuadrantSection({ chartEl, noteEl }) {
   function update({ dataset, movement = [], data = [], bands = {} } = {}) {
     renderCharts(chartEl, movement, data, bands, dataset);
     if (noteEl) {
-      noteEl.textContent = "Leg vs Arm work bias = (leg work minus arm work). Positive values indicate leg-heavy attempts; negative values indicate arm-heavy attempts.";
+      noteEl.textContent = "Leg vs Arm work bias = leg work divided by arm work. Values above 1.0 indicate leg-heavy attempts; values below 1.0 indicate arm-heavy attempts.";
     }
   }
 
@@ -20,13 +20,14 @@ function renderCharts(containerEl, movementEntries, datasetRows, bands, dataset)
   }
   containerEl.textContent = "";
   const distanceLookup = buildDistanceLookup(datasetRows);
-  const rows = (movementEntries || [])
+  let rows = (movementEntries || [])
     .map((entry) => ({
       name: entry.name || entry.Name || "",
       movementIntensity: numberOrNaN(entry.movement_intensity),
       distance: distanceLookup[normalizeName(entry.name || entry.Name)] ?? NaN,
       armWork: numberOrNaN(entry.arm_work_total),
       legWork: numberOrNaN(entry.leg_work_total),
+      legArmWorkRatio: numberOrNaN(entry.leg_arm_work_ratio),
     }))
     .filter(
       (row) =>
@@ -43,8 +44,18 @@ function renderCharts(containerEl, movementEntries, datasetRows, bands, dataset)
   }
 
   rows.forEach((row) => {
-    row.workBias = row.legWork - row.armWork;
+    const directRatio = Number.isFinite(row.legArmWorkRatio) && row.legArmWorkRatio >= 0 ? row.legArmWorkRatio : NaN;
+    const computedRatio = row.armWork > 0 ? row.legWork / row.armWork : NaN;
+    const ratio = Number.isFinite(directRatio) ? directRatio : computedRatio;
+    row.workBias = Number.isFinite(ratio) ? ratio : NaN;
   });
+
+  rows = rows.filter((row) => Number.isFinite(row.workBias));
+
+  if (!rows.length) {
+    containerEl.textContent = "Movement intensity data unavailable.";
+    return;
+  }
 
   const intensityChart = document.createElement("div");
   intensityChart.className = "chart";
@@ -134,10 +145,10 @@ function drawWorkBiasVsDistance(container, rows, band) {
     .append("svg")
     .attr("viewBox", `0 0 ${width} ${height}`)
     .attr("role", "img")
-    .attr("aria-label", "Work bias vs distance");
+    .attr("aria-label", "Leg/arm work ratio vs distance");
 
   const xDomain = d3.extent(rows, (row) => row.distance);
-  const yDomain = buildSymmetricDomain(rows.map((row) => row.workBias));
+  const yDomain = buildRatioDomain(rows.map((row) => row.workBias));
 
   const xScale = d3.scaleLinear().domain(xDomain).range([margin.left, width - margin.right]);
   const yScale = d3.scaleLinear().domain(yDomain).range([height - margin.bottom, margin.top]);
@@ -160,8 +171,8 @@ function drawWorkBiasVsDistance(container, rows, band) {
     .append("line")
     .attr("x1", margin.left)
     .attr("x2", width - margin.right)
-    .attr("y1", yScale(0))
-    .attr("y2", yScale(0))
+    .attr("y1", yScale(1))
+    .attr("y2", yScale(1))
     .attr("stroke", "#94a3b8")
     .attr("stroke-dasharray", "4 4");
 
@@ -188,7 +199,7 @@ function drawWorkBiasVsDistance(container, rows, band) {
         `
           <strong>${row.name}</strong>
           <div>Distance: ${row.distance?.toFixed(0) ?? ""} m</div>
-          <div>Leg - arm work: ${row.workBias?.toFixed(2) ?? ""}</div>
+          <div>Leg ÷ arm work: ${row.workBias?.toFixed(2) ?? ""}</div>
         `
       );
     })
@@ -199,7 +210,7 @@ function drawWorkBiasVsDistance(container, rows, band) {
     .append("text")
     .attr("x", margin.left)
     .attr("y", margin.top - 10)
-    .text("Leg vs arm work bias vs distance");
+    .text("Leg vs arm work ratio vs distance");
 }
 
 function numberOrNaN(value) {
@@ -236,15 +247,24 @@ function expandDomain(domain) {
   return [min - padding, max + padding];
 }
 
-function buildSymmetricDomain(values) {
-  const maxAbs = values.reduce((acc, value) => {
-    if (!Number.isFinite(value)) {
-      return acc;
-    }
-    return Math.max(acc, Math.abs(value));
-  }, 0);
-  const limit = Math.max(0.5, maxAbs * 1.1 || 1);
-  return [-limit, limit];
+function buildRatioDomain(values) {
+  const filtered = values.filter((value) => Number.isFinite(value) && value >= 0);
+  if (!filtered.length) {
+    return [0.4, 1.6];
+  }
+  let min = Math.min(...filtered);
+  let max = Math.max(...filtered);
+  if (min === max) {
+    const pad = Math.max(0.05, min * 0.1 || 0.1);
+    min = Math.max(0, min - pad);
+    max += pad;
+  }
+  const padding = (max - min) * 0.1 || 0.05;
+  min = Math.max(0, min - padding);
+  max += padding;
+  min = Math.min(min, 1 - padding);
+  max = Math.max(max, 1 + padding);
+  return [Math.max(0, min), Math.max(max, 0.2)];
 }
 
 function drawBand(svg, xScale, yScale, samples, color) {

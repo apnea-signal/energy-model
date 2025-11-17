@@ -41,6 +41,7 @@ class IntensityRecord:
     leg_work_per_kick: float | None
     arm_work_total: float
     leg_work_total: float
+    leg_arm_work_ratio: float | None
     movement_intensity: float | None
 
     def to_dict(self) -> dict:
@@ -54,6 +55,7 @@ class IntensityRecord:
             "leg_work_per_kick": round(self.leg_work_per_kick, 4) if self.leg_work_per_kick is not None else None,
             "arm_work_total": round(self.arm_work_total, 4),
             "leg_work_total": round(self.leg_work_total, 4),
+            "leg_arm_work_ratio": round(self.leg_arm_work_ratio, 4) if self.leg_arm_work_ratio is not None else None,
             "movement_intensity": round(self.movement_intensity, 4) if self.movement_intensity is not None else None,
         }
 
@@ -197,6 +199,7 @@ def compute_split_records(
         leg_work = work_total - arm_work
         arm_work_per_pull = arm_work / arm_pulls
         leg_work_per_kick = (leg_work / leg_kicks) if leg_kicks > 0 else None
+        leg_arm_work_ratio = (leg_work / arm_work) if arm_work > 0 else None
         records.append(
             IntensityRecord(
                 name=str(name),
@@ -209,6 +212,7 @@ def compute_split_records(
                 leg_work_per_kick=float(leg_work_per_kick) if leg_work_per_kick is not None else None,
                 arm_work_total=float(arm_work),
                 leg_work_total=float(leg_work),
+                leg_arm_work_ratio=float(leg_arm_work_ratio) if leg_arm_work_ratio is not None else None,
                 movement_intensity=None,
             )
         )
@@ -236,6 +240,7 @@ def compute_split_records(
             leg_work_per_kick=record.leg_work_per_kick,
             arm_work_total=record.arm_work_total,
             leg_work_total=record.leg_work_total,
+            leg_arm_work_ratio=record.leg_arm_work_ratio,
             movement_intensity=movement_intensity,
         )
     return records
@@ -272,6 +277,9 @@ def aggregate_by_athlete(records: Iterable[IntensityRecord]) -> List[dict]:
                 else None,
                 "arm_work_total": round(median([entry.arm_work_total for entry in entries]), 4),
                 "leg_work_total": round(median([entry.leg_work_total for entry in entries]), 4),
+                "leg_arm_work_ratio": round(median_optional([entry.leg_arm_work_ratio for entry in entries]), 4)
+                if any(entry.leg_arm_work_ratio is not None for entry in entries)
+                else None,
                 "movement_intensity": round(median_optional([entry.movement_intensity for entry in entries]), 4)
                 if any(entry.movement_intensity is not None for entry in entries)
                 else None,

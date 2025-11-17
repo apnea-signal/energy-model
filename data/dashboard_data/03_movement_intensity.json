@@ -23,6 +23,7 @@
         "leg_work_per_kick": 2.252,
         "arm_work_total": 24.7721,
         "leg_work_total": 12.386,
+        "leg_arm_work_ratio": 0.5,
         "movement_intensity": 1.0355
       },
       {
@@ -36,6 +37,7 @@
         "leg_work_per_kick": 2.5626,
         "arm_work_total": 23.0637,
         "leg_work_total": 14.0945,
+        "leg_arm_work_ratio": 0.6111,
         "movement_intensity": 1.1783
       },
       {
@@ -49,6 +51,7 @@
         "leg_work_per_kick": 1.8936,
         "arm_work_total": 28.4041,
         "leg_work_total": 16.0957,
+        "leg_arm_work_ratio": 0.5667,
         "movement_intensity": 0.8707
       },
       {
@@ -62,6 +65,7 @@
         "leg_work_per_kick": 2.1749,
         "arm_work_total": 26.0983,
         "leg_work_total": 15.224,
+        "leg_arm_work_ratio": 0.5833,
         "movement_intensity": 1.0
       },
       {
@@ -75,6 +79,7 @@
         "leg_work_per_kick": 2.9667,
         "arm_work_total": 29.6665,
         "leg_work_total": 14.8333,
+        "leg_arm_work_ratio": 0.5,
         "movement_intensity": 1.3641
       },
       {
@@ -88,6 +93,7 @@
         "leg_work_per_kick": 1.5483,
         "arm_work_total": 24.7721,
         "leg_work_total": 12.386,
+        "leg_arm_work_ratio": 0.5,
         "movement_intensity": 0.7119
       },
       {
@@ -101,6 +107,7 @@
         "leg_work_per_kick": 2.6416,
         "arm_work_total": 29.0575,
         "leg_work_total": 17.1703,
+        "leg_arm_work_ratio": 0.5909,
         "movement_intensity": 1.2146
       },
       {
@@ -114,6 +121,7 @@
         "leg_work_per_kick": 1.6387,
         "arm_work_total": 11.4708,
         "leg_work_total": 22.1223,
+        "leg_arm_work_ratio": 1.9286,
         "movement_intensity": 0.7535
       },
       {
@@ -127,6 +135,7 @@
         "leg_work_per_kick": 1.2386,
         "arm_work_total": 24.7721,
         "leg_work_total": 12.386,
+        "leg_arm_work_ratio": 0.5,
         "movement_intensity": 0.5695
       },
       {
@@ -140,6 +149,7 @@
         "leg_work_per_kick": 2.2144,
         "arm_work_total": 26.5731,
         "leg_work_total": 13.2866,
+        "leg_arm_work_ratio": 0.5,
         "movement_intensity": 1.0182
       },
       {
@@ -153,6 +163,7 @@
         "leg_work_per_kick": 2.0833,
         "arm_work_total": 25.0,
         "leg_work_total": 25.0,
+        "leg_arm_work_ratio": 1.0,
         "movement_intensity": 0.9579
       },
       {
@@ -166,6 +177,7 @@
         "leg_work_per_kick": 1.596,
         "arm_work_total": 23.9395,
         "leg_work_total": 11.9697,
+        "leg_arm_work_ratio": 0.5,
         "movement_intensity": 0.7338
       },
       {
@@ -179,6 +191,7 @@
         "leg_work_per_kick": 2.0546,
         "arm_work_total": 30.8185,
         "leg_work_total": 15.4093,
+        "leg_arm_work_ratio": 0.5,
         "movement_intensity": 0.9447
       },
       {
@@ -192,6 +205,7 @@
         "leg_work_per_kick": 1.4586,
         "arm_work_total": 11.6689,
         "leg_work_total": 14.5861,
+        "leg_arm_work_ratio": 1.25,
         "movement_intensity": 0.6707
       },
       {
@@ -205,6 +219,7 @@
         "leg_work_per_kick": 2.252,
         "arm_work_total": 24.7721,
         "leg_work_total": 12.386,
+        "leg_arm_work_ratio": 0.5,
         "movement_intensity": 1.0355
       },
       {
@@ -218,6 +233,7 @@
         "leg_work_per_kick": 2.4822,
         "arm_work_total": 12.4108,
         "leg_work_total": 26.0626,
+        "leg_arm_work_ratio": 2.1,
         "movement_intensity": 1.1413
       },
       {
@@ -231,6 +247,7 @@
         "leg_work_per_kick": 2.5044,
         "arm_work_total": 27.5482,
         "leg_work_total": 13.7741,
+        "leg_arm_work_ratio": 0.5,
         "movement_intensity": 1.1515
       },
       {
@@ -244,6 +261,7 @@
         "leg_work_per_kick": 3.7724,
         "arm_work_total": 37.7245,
         "leg_work_total": 18.8622,
+        "leg_arm_work_ratio": 0.5,
         "movement_intensity": 1.7346
       },
       {
@@ -257,6 +275,7 @@
         "leg_work_per_kick": 2.252,
         "arm_work_total": 24.7721,
         "leg_work_total": 12.386,
+        "leg_arm_work_ratio": 0.5,
         "movement_intensity": 1.0355
       },
       {
@@ -270,6 +289,7 @@
         "leg_work_per_kick": 1.5625,
         "arm_work_total": 25.0,
         "leg_work_total": 25.0,
+        "leg_arm_work_ratio": 1.0,
         "movement_intensity": 0.7184
       },
       {
@@ -283,6 +303,7 @@
         "leg_work_per_kick": 2.1191,
         "arm_work_total": 27.5482,
         "leg_work_total": 13.7741,
+        "leg_arm_work_ratio": 0.5,
         "movement_intensity": 0.9744
       }
     ]
