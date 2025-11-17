@@ -90,10 +90,9 @@ export function createStaReferenceSection({ staTableEl, staChartEl, staTrainingN
     const height = 360;
     const margins = { top: 20, right: 30, bottom: 60, left: 80 };
     const [minSta, maxSta] = d3.extent(points, (d) => d.staSeconds);
-    const maxDistance = d3.max(points, (d) => d.distance) || 0;
-    const yDomainMax = Math.max(maxDistance, 110);
+    const [minDistance, maxDistance] = d3.extent(points, (d) => d.distance);
 
-    if (!Number.isFinite(minSta) || !Number.isFinite(maxSta)) {
+    if (!Number.isFinite(minSta) || !Number.isFinite(maxSta) || !Number.isFinite(minDistance) || !Number.isFinite(maxDistance)) {
       chartSelection
         .append("div")
         .attr("class", "alert")
@@ -103,50 +102,53 @@ export function createStaReferenceSection({ staTableEl, staChartEl, staTrainingN
 
     const x = d3
       .scaleLinear()
-      .domain([minSta, maxSta])
+      .domain([Math.min(100, minDistance), maxDistance])
       .nice()
       .range([margins.left, width - margins.right]);
     const y = d3
       .scaleLinear()
-      .domain([100, yDomainMax])
+      .domain([minSta, maxSta])
       .nice()
       .range([height - margins.bottom, margins.top]);
 
     const svg = chartSelection.append("svg").attr("viewBox", `0 0 ${width} ${height}`);
+    const clipId = createPlotClip(svg, { width, height, margins });
+    const plotGroup = svg.append("g").attr("clip-path", `url(#${clipId})`);
+    applyQuadrantGradient(svg, plotGroup, { width, height, margins });
     const staTooltip = createChartTooltip(chartSelection);
 
     svg
       .append("g")
       .attr("transform", `translate(0, ${height - margins.bottom})`)
-      .call(d3.axisBottom(x).tickFormat((d) => formatSeconds(d)))
+      .call(d3.axisBottom(x))
       .append("text")
       .attr("x", width / 2)
       .attr("y", 45)
       .attr("fill", "#0f172a")
-      .text("Static PB (mm:ss)");
+      .text("Total performance (m)");
 
     svg
       .append("g")
       .attr("transform", `translate(${margins.left}, 0)`)
-      .call(d3.axisLeft(y))
+      .call(d3.axisLeft(y).tickFormat((d) => formatSeconds(d)))
       .append("text")
       .attr("text-anchor", "end")
       .attr("transform", "rotate(-90)")
       .attr("x", -height / 2)
       .attr("y", -55)
       .attr("fill", "#0f172a")
-      .text("Total performance (m)");
+      .text("Static PB (mm:ss)");
 
-    renderStaTrendBand(svg, x, y);
+    renderStaTrendBand(plotGroup, x, y);
 
-    const circles = svg
+    const circles = plotGroup
       .append("g")
       .selectAll("circle")
       .data(points)
       .enter()
       .append("circle")
-      .attr("cx", (d) => x(d.staSeconds))
-      .attr("cy", (d) => y(d.distance))
+      .attr("cx", (d) => x(d.distance))
+      .attr("cy", (d) => y(d.staSeconds))
       .attr("r", 5)
       .attr("fill", (d) => (Number(d.staYear) >= 2024 ? "#0284c7" : "#94a3b8"))
       .attr("stroke", "#0f172a")
@@ -159,7 +161,7 @@ export function createStaReferenceSection({ staTableEl, staChartEl, staTrainingN
           return;
         }
         const staLine = `STA ${d.staDisplay || "-"}${d.staYear ? ` (${d.staYear})` : ""}`;
-        staTooltip.show(event, `<strong>${d.name}</strong><div>${staLine}</div><div>${d.distance} m ${state.dataset}</div>`);
+        staTooltip.show(event, `<strong>${d.name}</strong><div>${d.distance} m ${state.dataset}</div><div>${staLine}</div>`);
       })
       .on("mousemove", (event) => {
         staTooltip?.move(event);
@@ -168,25 +170,27 @@ export function createStaReferenceSection({ staTableEl, staChartEl, staTrainingN
         staTooltip?.hide();
       })
       .append("title")
-      .text((d) => `${d.name}: STA ${d.staDisplay || "-"}${d.staYear ? ` (${d.staYear})` : ""} → ${d.distance} m ${state.dataset}`);
+      .text((d) => `${d.name}: ${d.distance} m ${state.dataset} ← STA ${d.staDisplay || "-"}${d.staYear ? ` (${d.staYear})` : ""}`);
   }
 
-  function renderStaTrendBand(svg, xScale, yScale) {
-    const samples = state.modelParams?.[state.dataset]?.sta_band?.samples || [];
+  function renderStaTrendBand(plotSelection, xScale, yScale) {
+    const band = state.modelParams?.[state.dataset]?.sta_band;
+    const samples = band?.samples || [];
     if (!samples.length) {
       return;
     }
+    const normalizedSamples = normalizeBandSamples(samples, yScale, band);
 
     const area = d3
       .area()
-      .x((d) => xScale(d.x))
-      .y0((d) => yScale(d.lower))
-      .y1((d) => yScale(d.upper))
-      .curve(d3.curveMonotoneX);
+      .x0((d) => xScale(d.lower))
+      .x1((d) => xScale(d.upper))
+      .y((d) => yScale(d.x))
+      .curve(d3.curveMonotoneY);
 
-    svg
+    plotSelection
       .append("path")
-      .datum(samples)
+      .datum(normalizedSamples)
       .attr("class", "sta-band")
       .attr("fill", "rgba(14, 165, 233, 0.12)")
       .attr("stroke", "none")
@@ -194,19 +198,141 @@ export function createStaReferenceSection({ staTableEl, staChartEl, staTrainingN
 
     const line = d3
       .line()
-      .x((d) => xScale(d.x))
-      .y((d) => yScale(d.center))
-      .curve(d3.curveMonotoneX);
+      .x((d) => xScale(d.center))
+      .y((d) => yScale(d.x))
+      .curve(d3.curveMonotoneY);
 
-    svg
+    plotSelection
       .append("path")
-      .datum(samples)
+      .datum(normalizedSamples)
       .attr("class", "sta-band-line")
       .attr("fill", "none")
       .attr("stroke", "#0284c7")
       .attr("stroke-width", 1.5)
       .attr("stroke-dasharray", "6 4")
       .attr("d", line);
+  }
+
+  function applyQuadrantGradient(svg, plotSelection, { width, height, margins }) {
+    const defs = ensureDefs(svg);
+    const gradientId = "staPerformanceBg";
+    const gradient = defs
+      .append("linearGradient")
+      .attr("id", gradientId)
+      .attr("x1", "0%")
+      .attr("y1", "0%")
+      .attr("x2", "100%")
+      .attr("y2", "100%");
+
+    gradient
+      .append("stop")
+      .attr("offset", "0%")
+      .attr("stop-color", "rgba(248, 113, 113, 0.15)");
+    gradient
+      .append("stop")
+      .attr("offset", "100%")
+      .attr("stop-color", "rgba(134, 239, 172, 0.18)");
+
+    plotSelection
+      .append("rect")
+      .attr("class", "sta-bg-gradient")
+      .attr("x", margins.left)
+      .attr("y", margins.top)
+      .attr("width", Math.max(0, width - margins.left - margins.right))
+      .attr("height", Math.max(0, height - margins.top - margins.bottom))
+      .attr("fill", `url(#${gradientId})`);
+  }
+
+  function normalizeBandSamples(samples, yScale, band) {
+    const sorted = (samples || []).slice().sort((a, b) => a.x - b.x);
+    if (!sorted.length) {
+      return [];
+    }
+    const [domainStart, domainEnd] = yScale.domain();
+    const staMin = Math.min(domainStart, domainEnd);
+    const staMax = Math.max(domainStart, domainEnd);
+    insertBoundarySample(sorted, staMin, band);
+    insertBoundarySample(sorted, staMax, band);
+    return sorted.sort((a, b) => a.x - b.x);
+  }
+
+  function insertBoundarySample(collection, targetSeconds, band) {
+    if (!Number.isFinite(targetSeconds) || !collection.length) {
+      return collection;
+    }
+    const epsilon = 0.001;
+    if (collection.some((sample) => Math.abs(sample.x - targetSeconds) <= epsilon)) {
+      return collection;
+    }
+    const projected = buildProjectedSample(targetSeconds, band, collection);
+    if (projected) {
+      collection.push(projected);
+    }
+    return collection;
+  }
+
+  function buildProjectedSample(seconds, band, collection) {
+    const meta = band?.metadata || {};
+    const slope = Number(meta.slope);
+    const offset = Number(meta.offset_seconds);
+    const baseline = Number(meta.baseline);
+    let halfWidth = Number(band?.band_width) / 2;
+    if (!Number.isFinite(halfWidth) || halfWidth <= 0) {
+      const ref = collection[0];
+      const span = Number(ref?.upper) - Number(ref?.center);
+      halfWidth = Number.isFinite(span) ? Math.abs(span) : 15;
+    }
+    if (Number.isFinite(slope) && Number.isFinite(offset) && Number.isFinite(baseline)) {
+      const center = slope * (seconds - offset) + baseline;
+      return {
+        x: seconds,
+        center,
+        lower: center - halfWidth,
+        upper: center + halfWidth,
+      };
+    }
+    if (collection.length < 2) {
+      const center = collection[0]?.center ?? 0;
+      return { x: seconds, center, lower: center - halfWidth, upper: center + halfWidth };
+    }
+    const ordered = collection.slice().sort((a, b) => a.x - b.x);
+    let before = ordered[0];
+    let after = ordered[ordered.length - 1];
+    for (let i = 0; i < ordered.length - 1; i += 1) {
+      const current = ordered[i];
+      const next = ordered[i + 1];
+      if (seconds >= current.x && seconds <= next.x) {
+        before = current;
+        after = next;
+        break;
+      }
+    }
+    const span = after.x - before.x || 1;
+    const ratio = (seconds - before.x) / span;
+    const center = before.center + (after.center - before.center) * ratio;
+    return { x: seconds, center, lower: center - halfWidth, upper: center + halfWidth };
+  }
+
+  function ensureDefs(svg) {
+    let defs = svg.select("defs");
+    if (defs.empty()) {
+      defs = svg.append("defs");
+    }
+    return defs;
+  }
+
+  function createPlotClip(svg, { width, height, margins }) {
+    const defs = ensureDefs(svg);
+    const clipId = `staClip-${Math.random().toString(36).slice(2, 8)}`;
+    defs
+      .append("clipPath")
+      .attr("id", clipId)
+      .append("rect")
+      .attr("x", margins.left)
+      .attr("y", margins.top)
+      .attr("width", Math.max(0, width - margins.left - margins.right))
+      .attr("height", Math.max(0, height - margins.top - margins.bottom));
+    return clipId;
   }
 
   function renderStaTrainingNote(points) {
