@@ -55,19 +55,48 @@ details .table-container {
   border-radius: 0;
 }
 
-nav {
-  background: #0f172a;
+.top-nav {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  background: rgba(15, 23, 42, 0.95);
   color: #fff;
   padding: 0.75rem 1.5rem;
   display: flex;
-  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-start;
   gap: 1rem;
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.4);
+  backdrop-filter: blur(8px);
 }
 
-nav a {
-  color: #fff;
-  text-decoration: none;
+.dataset-menu {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.dataset-link {
+  background: transparent;
+  color: #cbd5f5;
+  border: 1px solid rgba(248, 250, 252, 0.2);
+  padding: 0.35rem 0.9rem;
+  border-radius: 999px;
   font-weight: 600;
+  transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+}
+
+.dataset-link:hover,
+.dataset-link:focus-visible {
+  border-color: #f8fafc;
+  color: #fff;
+  outline: none;
+}
+
+.dataset-link.is-active {
+  background: #f8fafc;
+  color: #0f172a;
+  border-color: #f8fafc;
 }
 
 .controls {

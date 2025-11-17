@@ -14,7 +14,7 @@ const MODEL_PARAM_FILES = [
   "./dashboard_data/02_static_bands.json",
 ];
 
-const datasetSelect = document.getElementById("datasetSelect");
+const datasetNavButtons = Array.from(document.querySelectorAll(".dataset-link[data-dataset]"));
 const timeTableEl = document.getElementById("timeTable");
 const techniqueTableEl = document.getElementById("techniqueTable");
 const distanceTimeChartEl = document.getElementById("distanceTimeChart");
@@ -47,15 +47,7 @@ const state = {
 let MODEL_PARAMS = {};
 let staRoster = [];
 
-Object.keys(DATASETS).forEach((name) => {
-  const option = document.createElement("option");
-  option.value = name;
-  option.textContent = name;
-  datasetSelect.appendChild(option);
-});
-
-datasetSelect.value = state.dataset;
-datasetSelect.addEventListener("change", () => loadDataset(datasetSelect.value));
+setupDatasetNav();
 
 init();
 
@@ -98,13 +90,34 @@ async function loadStaData() {
 
 async function loadDataset(dataset) {
   state.dataset = dataset;
-  datasetSelect.value = dataset;
+  updateDatasetNav(dataset);
   const url = DATASETS[dataset];
   const data = await d3.csv(url, d3.autoType);
   state.data = data;
   distanceTimeSection.update({ data, dataset, modelParams: MODEL_PARAMS });
   techniqueSection.update(data);
   staReferenceSection.updateDataset({ data, dataset, modelParams: MODEL_PARAMS });
+}
+
+function setupDatasetNav() {
+  datasetNavButtons.forEach((button) => {
+    button.addEventListener("click", () => {
+      const dataset = button.dataset.dataset;
+      if (dataset && dataset !== state.dataset) {
+        loadDataset(dataset);
+      }
+    });
+  });
+  updateDatasetNav(state.dataset);
+}
+
+function updateDatasetNav(activeDataset) {
+  datasetNavButtons.forEach((button) => {
+    const isActive = button.dataset.dataset === activeDataset;
+    button.classList.toggle("is-active", isActive);
+    button.setAttribute("aria-selected", String(isActive));
+    button.setAttribute("tabindex", isActive ? "0" : "-1");
+  });
 }
 
 async function loadModelParams() {
