@@ -5,13 +5,14 @@ import { createTechniqueSection } from "./components/techniqueSection.js";
 import { normalizeName, parseTimeToSeconds } from "./utils.js";
 
 const DATASETS = {
-  DNF: "../data/aida_greece_2025/DNF.csv",
-  DYNB: "../data/aida_greece_2025/DYNB.csv",
+  DNF: () => `../data/aida_greece_2025/DNF.csv?ts=${Date.now()}`,
+  DYNB: () => `../data/aida_greece_2025/DYNB.csv?ts=${Date.now()}`,
 };
 const STA_DATA_URL = "../data/aida_greece_2025/STA_PB.csv";
 const MODEL_PARAM_FILES = [
   "../data/dashboard_data/01_split_stats.json",
   "../data/dashboard_data/02_static_bands.json",
+  "../data/dashboard_data/03_movement_intensity.json",
 ];
 
 const datasetNavButtons = Array.from(document.querySelectorAll(".dataset-link[data-dataset]"));
@@ -91,11 +92,16 @@ async function loadStaData() {
 async function loadDataset(dataset) {
   state.dataset = dataset;
   updateDatasetNav(dataset);
-  const url = DATASETS[dataset];
+  const urlBuilder = DATASETS[dataset];
+  const url = typeof urlBuilder === "function" ? urlBuilder() : urlBuilder;
   const data = await d3.csv(url, d3.autoType);
   state.data = data;
   distanceTimeSection.update({ data, dataset, modelParams: MODEL_PARAMS });
-  techniqueSection.update(data);
+  techniqueSection.update({
+    data,
+    dataset,
+    movement: getMovementEntries(dataset),
+  });
   staReferenceSection.updateDataset({ data, dataset, modelParams: MODEL_PARAMS });
 }
 
@@ -157,4 +163,13 @@ function mergeModelParams(target, source) {
     }
   });
   return target;
+}
+
+function getMovementEntries(dataset) {
+  const payload = MODEL_PARAMS?.[dataset];
+  if (!payload) {
+    return [];
+  }
+  const { athletes } = payload;
+  return Array.isArray(athletes) ? athletes : [];
 }

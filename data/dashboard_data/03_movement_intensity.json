@@ -265,12 +265,12 @@
         "split_time_s": 50.0,
         "split_speed_m_s": 1.0,
         "arm_pulls": 8.0,
-        "leg_kicks": 8.0,
-        "arm_work_per_pull": 4.1667,
-        "leg_work_per_kick": 2.0833,
-        "arm_work_total": 33.3333,
-        "leg_work_total": 16.6667,
-        "movement_intensity": 0.9579
+        "leg_kicks": 16.0,
+        "arm_work_per_pull": 3.125,
+        "leg_work_per_kick": 1.5625,
+        "arm_work_total": 25.0,
+        "leg_work_total": 25.0,
+        "movement_intensity": 0.7184
       },
       {
         "name": "SOPRONYI Andras",
