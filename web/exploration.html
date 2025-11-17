@@ -79,8 +79,20 @@
       <section id="techniqueInsights">
         <h2>Technique</h2>
         <p>Review kick templates, wall habits, and the derived movement intensity for each athlete.</p>
-        <div class="table-container">
-          <div id="techniqueTable" class="preview-table"></div>
+        <details id="techniquePanel">
+          <summary>Technique Table</summary>
+          <div class="table-container">
+            <div id="techniqueTable" class="preview-table"></div>
+          </div>
+        </details>
+        <div class="chart-block">
+          <h3>Movement Approaches</h3>
+          <p>
+            Athletes cluster based on movement intensity (vertical axis) and whether total work is biased toward legs or arms
+            (horizontal axis). Use the quadrants to spot low-intensity gliders vs. high-intensity leg drivers.
+          </p>
+          <div id="movementQuadrantChart" class="chart"></div>
+          <aside id="movementQuadrantNote" class="note-shelf" aria-live="polite"></aside>
         </div>
       </section>
     </main>

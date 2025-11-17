@@ -2,6 +2,7 @@ import * as d3 from "https://cdn.jsdelivr.net/npm/d3@7/+esm";
 import { createDistanceTimeSection } from "./components/distanceTimeSection.js";
 import { createStaReferenceSection } from "./components/staReferenceSection.js";
 import { createTechniqueSection } from "./components/techniqueSection.js";
+import { createMovementQuadrantSection } from "./components/movementQuadrantSection.js";
 import { normalizeName, parseTimeToSeconds } from "./utils.js";
 
 const DATASETS = {
@@ -13,11 +14,14 @@ const MODEL_PARAM_FILES = [
   "../data/dashboard_data/01_split_stats.json",
   "../data/dashboard_data/02_static_bands.json",
   "../data/dashboard_data/03_movement_intensity.json",
+  "../data/dashboard_data/04_movement_bands.json",
 ];
 
 const datasetNavButtons = Array.from(document.querySelectorAll(".dataset-link[data-dataset]"));
 const timeTableEl = document.getElementById("timeTable");
 const techniqueTableEl = document.getElementById("techniqueTable");
+const movementQuadrantChartEl = document.getElementById("movementQuadrantChart");
+const movementQuadrantNoteEl = document.getElementById("movementQuadrantNote");
 const distanceTimeChartEl = document.getElementById("distanceTimeChart");
 const legendEl = document.getElementById("distanceTimeLegend");
 const splitStatsEl = document.getElementById("splitStats");
@@ -39,6 +43,7 @@ const staReferenceSection = createStaReferenceSection({
   staTrainingNoteEl,
 });
 const techniqueSection = createTechniqueSection({ techniqueTableEl });
+const movementQuadrantSection = createMovementQuadrantSection({ chartEl: movementQuadrantChartEl, noteEl: movementQuadrantNoteEl });
 
 const state = {
   dataset: "DNF",
@@ -101,6 +106,12 @@ async function loadDataset(dataset) {
     data,
     dataset,
     movement: getMovementEntries(dataset),
+  });
+  movementQuadrantSection.update({
+    dataset,
+    data,
+    movement: getMovementEntries(dataset),
+    bands: getMovementBands(dataset),
   });
   staReferenceSection.updateDataset({ data, dataset, modelParams: MODEL_PARAMS });
 }
@@ -172,4 +183,13 @@ function getMovementEntries(dataset) {
   }
   const { athletes } = payload;
   return Array.isArray(athletes) ? athletes : [];
+}
+
+function getMovementBands(dataset) {
+  const payload = MODEL_PARAMS?.[dataset];
+  if (!payload) {
+    return {};
+  }
+  const { movement_intensity_band, work_bias_band } = payload;
+  return { movement_intensity_band, work_bias_band };
 }
