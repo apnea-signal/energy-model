@@ -10,8 +10,8 @@ const DATASETS = {
 };
 const STA_DATA_URL = "../data/aida_greece_2025/STA_PB.csv";
 const MODEL_PARAM_FILES = [
-  "./dashboard_data/01_split_stats.json",
-  "./dashboard_data/02_static_bands.json",
+  "../data/dashboard_data/01_split_stats.json",
+  "../data/dashboard_data/02_static_bands.json",
 ];
 
 const datasetNavButtons = Array.from(document.querySelectorAll(".dataset-link[data-dataset]"));

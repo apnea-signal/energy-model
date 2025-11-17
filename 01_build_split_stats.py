@@ -28,7 +28,7 @@ DATASET_FILES: Mapping[str, str] = {
 }
 SPLIT_PATTERN = re.compile(r"^T(\d+)$", re.IGNORECASE)
 DEFAULT_DATA_ROOT = Path("data/aida_greece_2025")
-DEFAULT_OUTPUT = Path("web/dashboard_data/01_split_stats.json")
+DEFAULT_OUTPUT = Path("data/dashboard_data/01_split_stats.json")
 DEFAULT_STA_FILE = DEFAULT_DATA_ROOT / "STA_PB.csv"
 MIN_STA_SAMPLES = 3
 

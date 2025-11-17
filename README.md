@@ -32,6 +32,9 @@ previous regression experiments.
 │   ├── js/exploration.js
 │   └── styles.css
 └── data/
+    ├── dashboard_data/
+    │   ├── 01_split_stats.json
+    │   └── 02_static_bands.json
     └── aida_greece_2025/
         ├── DNF.csv
         ├── DYNB.csv
@@ -72,14 +75,14 @@ numbered processing scripts in the repository root (additional steps can be adde
 ```shell
 python run_all.py               # executes each numbered step in order
 # or run the individual steps with extra options
-python 01_build_split_stats.py --data-root data/aida_greece_2025 --output web/dashboard_data/01_split_stats.json
-python 02_static_bands.py --data-root data/aida_greece_2025 --output web/dashboard_data/02_static_bands.json
+python 01_build_split_stats.py --data-root data/aida_greece_2025 --output data/dashboard_data/01_split_stats.json
+python 02_static_bands.py --data-root data/aida_greece_2025 --output data/dashboard_data/02_static_bands.json
 ```
 `01_build_split_stats.py` averages each split checkpoint time while weighting athletes by their total distance. The
-resulting `web/dashboard_data/01_split_stats.json` feeds the split targets in `web/exploration.html`.
+resulting `data/dashboard_data/01_split_stats.json` feeds the split targets in `web/exploration.html`.
 
 `02_static_bands.py` joins each race result with the STA PB roster and uses the slope/offset heuristics derived in
-`01_build_split_stats.py` to emit the STA projection bands at `web/dashboard_data/02_static_bands.json`. The web UI merges
+`01_build_split_stats.py` to emit the STA projection bands at `data/dashboard_data/02_static_bands.json`. The web UI merges
 both JSON files when loading `web/exploration.html`.
 
 ## Testing

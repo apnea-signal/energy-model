@@ -22,8 +22,8 @@ DATASET_FILES: Mapping[str, str] = {
 }
 DEFAULT_DATA_ROOT = Path("data/aida_greece_2025")
 DEFAULT_STA_FILE = DEFAULT_DATA_ROOT / "STA_PB.csv"
-DEFAULT_MODEL_PARAMS = Path("web/dashboard_data/01_split_stats.json")
-DEFAULT_OUTPUT = Path("web/dashboard_data/02_static_bands.json")
+DEFAULT_MODEL_PARAMS = Path("data/dashboard_data/01_split_stats.json")
+DEFAULT_OUTPUT = Path("data/dashboard_data/02_static_bands.json")
 SAMPLE_COUNT = 25
 MIN_POINTS = 3
 
