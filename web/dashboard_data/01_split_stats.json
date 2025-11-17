@@ -29,7 +29,18 @@
         "weighted_time_str": "3:42",
         "samples": 9
       }
-    ]
+    ],
+    "sta_projection": {
+      "slope": 0.382478,
+      "offset_seconds": 266.0,
+      "angle_degrees": 20.931,
+      "sta_seconds_min": 266.0,
+      "sta_seconds_max": 575.0,
+      "distance_min": 132.0,
+      "distance_max": 239.0,
+      "distance_median": 185.0,
+      "sample_count": 19
+    }
   },
   "DYNB": {
     "splits": [
@@ -75,6 +86,17 @@
         "weighted_time_str": "4:54",
         "samples": 1
       }
-    ]
+    ],
+    "sta_projection": {
+      "slope": 0.522537,
+      "offset_seconds": 266.0,
+      "angle_degrees": 27.589,
+      "sta_seconds_min": 266.0,
+      "sta_seconds_max": 575.0,
+      "distance_min": 150.0,
+      "distance_max": 300.0,
+      "distance_median": 243.0,
+      "sample_count": 17
+    }
   }
 }

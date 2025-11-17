@@ -13,10 +13,11 @@ import json
 import logging
 import math
 import re
+import statistics
 import sys
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Iterable, List, Mapping, Sequence
+from typing import Dict, Iterable, List, Mapping, Sequence
 
 import pandas as pd
 
@@ -28,6 +29,8 @@ DATASET_FILES: Mapping[str, str] = {
 SPLIT_PATTERN = re.compile(r"^T(\d+)$", re.IGNORECASE)
 DEFAULT_DATA_ROOT = Path("data/aida_greece_2025")
 DEFAULT_OUTPUT = Path("web/dashboard_data/01_split_stats.json")
+DEFAULT_STA_FILE = DEFAULT_DATA_ROOT / "STA_PB.csv"
+MIN_STA_SAMPLES = 3
 
 
 @dataclass(frozen=True)
@@ -70,6 +73,12 @@ def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
         help="Restrict processing to a specific dataset (can be provided multiple times).",
     )
     parser.add_argument(
+        "--sta-file",
+        type=Path,
+        default=DEFAULT_STA_FILE,
+        help="CSV file with STA PB references (defaults to STA_PB.csv).",
+    )
+    parser.add_argument(
         "--verbose",
         action="store_true",
         help="Enable verbose logging.",
@@ -90,8 +99,9 @@ def main(argv: Sequence[str] | None = None) -> int:
     data_root = args.data_root
     output_path = args.output
     output_path.parent.mkdir(parents=True, exist_ok=True)
+    sta_lookup = load_sta_lookup(args.sta_file)
 
-    model_params: dict[str, dict[str, List[dict]]] = {}
+    model_params: Dict[str, dict] = {}
     for dataset in datasets:
         csv_path = data_root / DATASET_FILES[dataset]
         if not csv_path.exists():
@@ -99,11 +109,22 @@ def main(argv: Sequence[str] | None = None) -> int:
             continue
         LOGGER.info("Processing %s (%s)", dataset, csv_path)
         frame = pd.read_csv(csv_path)
+        payload: Dict[str, object] = {}
+
         split_stats = compute_dataset_splits(frame)
-        if not split_stats:
+        if split_stats:
+            payload["splits"] = [stat.to_dict() for stat in split_stats]
+        else:
             LOGGER.warning("No split stats computed for %s", dataset)
-            continue
-        model_params[dataset] = {"splits": [stat.to_dict() for stat in split_stats]}
+
+        sta_projection = compute_sta_projection_params(dataset, frame, sta_lookup)
+        if sta_projection:
+            payload["sta_projection"] = sta_projection
+        elif sta_lookup:
+            LOGGER.warning("No STA projection derived for %s", dataset)
+
+        if payload:
+            model_params[dataset] = payload
 
     if not model_params:
         LOGGER.error("No datasets processed successfully; aborting")
@@ -193,6 +214,76 @@ def format_seconds(total_seconds: float) -> str:
         minutes += 1
         seconds = 0
     return f"{minutes}:{seconds:02d}"
+
+
+def compute_sta_projection_params(dataset: str, frame: pd.DataFrame, sta_lookup: Dict[str, float]) -> dict | None:
+    samples = extract_sta_samples(frame, sta_lookup)
+    if len(samples) < MIN_STA_SAMPLES:
+        return None
+
+    sta_values = [sample[0] for sample in samples]
+    distances = [sample[1] for sample in samples]
+    sta_min = min(sta_values)
+    sta_max = max(sta_values)
+    sta_span = max(sta_max - sta_min, 1.0)
+    dist_min = min(distances)
+    dist_max = max(distances)
+    dist_median = statistics.median(distances)
+    range_ratio = (dist_max - dist_min) / sta_span
+    spread = max(0.0, dist_max - dist_median)
+    slope = max(0.05, range_ratio + 0.0003 * spread + 0.02)
+    offset = sta_min
+    angle = math.degrees(math.atan(slope))
+
+    return {
+        "slope": round(slope, 6),
+        "offset_seconds": round(offset, 3),
+        "angle_degrees": round(angle, 3),
+        "sta_seconds_min": sta_min,
+        "sta_seconds_max": sta_max,
+        "distance_min": dist_min,
+        "distance_max": dist_max,
+        "distance_median": dist_median,
+        "sample_count": len(samples),
+    }
+
+
+def extract_sta_samples(frame: pd.DataFrame, sta_lookup: Dict[str, float]) -> List[tuple[float, float]]:
+    samples: List[tuple[float, float]] = []
+    for _, row in frame.iterrows():
+        name = normalize_name(row.get("Name"))
+        if not name:
+            continue
+        sta_seconds = sta_lookup.get(name)
+        if sta_seconds is None:
+            continue
+        distance = row.get("Dist")
+        try:
+            distance_val = float(distance)
+        except (TypeError, ValueError):
+            continue
+        if math.isnan(distance_val):
+            continue
+        samples.append((float(sta_seconds), distance_val))
+    return samples
+
+
+def load_sta_lookup(csv_path: Path) -> Dict[str, float]:
+    if not csv_path.exists():
+        LOGGER.warning("STA roster missing: %s", csv_path)
+        return {}
+    frame = pd.read_csv(csv_path)
+    lookup: Dict[str, float] = {}
+    for _, row in frame.iterrows():
+        name = normalize_name(row.get("Name"))
+        seconds = parse_time_to_seconds(row.get("STA"))
+        if name and seconds is not None and math.isfinite(seconds):
+            lookup[name] = float(seconds)
+    return lookup
+
+
+def normalize_name(value) -> str:
+    return str(value or "").strip().lower()
 
 
 if __name__ == "__main__":

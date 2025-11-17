@@ -78,9 +78,9 @@ python 02_static_bands.py --data-root data/aida_greece_2025 --output web/dashboa
 `01_build_split_stats.py` averages each split checkpoint time while weighting athletes by their total distance. The
 resulting `web/dashboard_data/01_split_stats.json` feeds the split targets in `web/exploration.html`.
 
-`02_static_bands.py` joins each race result with the STA PB roster, applies the tuning values from
-`web/sta_band_settings.json`, and emits the STA projection bands at `web/dashboard_data/02_static_bands.json`. The web UI
-merges both JSON files when loading `web/exploration.html`.
+`02_static_bands.py` joins each race result with the STA PB roster and uses the slope/offset heuristics derived in
+`01_build_split_stats.py` to emit the STA projection bands at `web/dashboard_data/02_static_bands.json`. The web UI merges
+both JSON files when loading `web/exploration.html`.
 
 ## Testing
 Run the lightweight unit tests with:

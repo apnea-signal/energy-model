@@ -22,7 +22,7 @@ DATASET_FILES: Mapping[str, str] = {
 }
 DEFAULT_DATA_ROOT = Path("data/aida_greece_2025")
 DEFAULT_STA_FILE = DEFAULT_DATA_ROOT / "STA_PB.csv"
-DEFAULT_SETTINGS = Path("web/sta_band_settings.json")
+DEFAULT_MODEL_PARAMS = Path("web/dashboard_data/01_split_stats.json")
 DEFAULT_OUTPUT = Path("web/dashboard_data/02_static_bands.json")
 SAMPLE_COUNT = 25
 MIN_POINTS = 3
@@ -39,7 +39,7 @@ def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--data-root", type=Path, default=DEFAULT_DATA_ROOT)
     parser.add_argument("--sta-file", type=Path, default=DEFAULT_STA_FILE)
-    parser.add_argument("--settings", type=Path, default=DEFAULT_SETTINGS)
+    parser.add_argument("--model-params", type=Path, default=DEFAULT_MODEL_PARAMS)
     parser.add_argument("--output", type=Path, default=DEFAULT_OUTPUT)
     parser.add_argument(
         "--dataset",
@@ -67,9 +67,9 @@ def main(argv: Sequence[str] | None = None) -> int:
     if not sta_lookup:
         LOGGER.error("STA roster %s has no parsable entries", args.sta_file)
         return 1
-    settings = load_settings(args.settings)
-    if not settings:
-        LOGGER.error("STA band settings missing %s", args.settings)
+    projection_params = load_projection_params(args.model_params)
+    if not projection_params:
+        LOGGER.error("Projection metadata missing %s", args.model_params)
         return 1
 
     output_payload: Dict[str, Dict[str, object]] = {}
@@ -83,11 +83,16 @@ def main(argv: Sequence[str] | None = None) -> int:
         if len(samples) < MIN_POINTS:
             LOGGER.warning("Skipping %s – insufficient STA-linked rows", dataset)
             continue
-        config = settings.get(dataset)
-        if not config:
-            LOGGER.warning("Skipping %s – no settings entry", dataset)
+        projection = projection_params.get(dataset, {}).get("sta_projection")
+        if not projection:
+            LOGGER.warning("Skipping %s – missing sta_projection in %s", dataset, args.model_params)
             continue
-        sta_band = build_sta_band(dataset, samples, config)
+        slope = float(projection.get("slope", 0) or 0)
+        offset = float(projection.get("offset_seconds", 0) or 0)
+        if slope <= 0:
+            LOGGER.warning("Skipping %s – invalid slope %s", dataset, slope)
+            continue
+        sta_band = build_sta_band(dataset, samples, slope=slope, offset=offset)
         if not sta_band:
             continue
         output_payload.setdefault(dataset, {})["sta_band"] = sta_band
@@ -123,11 +128,11 @@ def load_sta_lookup(csv_path: Path) -> Dict[str, dict]:
     return lookup
 
 
-def load_settings(settings_path: Path) -> dict:
-    if not settings_path.exists():
-        LOGGER.error("Settings file missing: %s", settings_path)
+def load_projection_params(path: Path) -> dict:
+    if not path.exists():
+        LOGGER.error("Model params missing: %s", path)
         return {}
-    with settings_path.open("r", encoding="utf-8") as handle:
+    with path.open("r", encoding="utf-8") as handle:
         return json.load(handle)
 
 
@@ -153,9 +158,7 @@ def extract_sta_samples(frame: pd.DataFrame, sta_lookup: Dict[str, dict]) -> Lis
     return samples
 
 
-def build_sta_band(dataset: str, samples: List[StaSample], config: dict) -> dict | None:
-    slope = slope_from_config(config, samples)
-    offset = float(config.get("offset_seconds", 0) or 0)
+def build_sta_band(dataset: str, samples: List[StaSample], *, slope: float, offset: float) -> dict | None:
     predictions = [slope * (sample.sta_seconds - offset) for sample in samples]
     baseline = statistics.median(sample.distance_m - pred for sample, pred in zip(samples, predictions))
 
@@ -167,6 +170,19 @@ def build_sta_band(dataset: str, samples: List[StaSample], config: dict) -> dict
     abs_deviation = [abs(res - residual_median) for res in residuals]
     mad = statistics.median(abs_deviation) if abs_deviation else 0.0
     half_width = max(5.0, mad * 1.4826)
+    coverage = compute_coverage(residuals, residual_median, half_width)
+    target_coverage = 0.60
+    iterations = 0
+    while coverage < target_coverage and iterations < 10:
+        half_width *= 1.2
+        coverage = compute_coverage(residuals, residual_median, half_width)
+        iterations += 1
+
+    top_sta = max(sample.sta_seconds for sample in samples)
+    top_distance = max(sample.distance_m for sample in samples)
+    top_center = predict(top_sta)
+    if top_distance > top_center + half_width:
+        half_width += (top_distance - (top_center + half_width)) + 2.0
 
     domain = build_domain(samples)
     sampled_curve = [
@@ -174,46 +190,36 @@ def build_sta_band(dataset: str, samples: List[StaSample], config: dict) -> dict
     ]
 
     LOGGER.info(
-        "%s: slope=%.3f offset=%.1f baseline=%.1f width=%.1f points=%d",
+        "%s: slope=%.3f offset=%.1f baseline=%.1f width=%.1f coverage=%.2f points=%d",
         dataset,
         slope,
         offset,
         baseline,
         half_width * 2,
+        coverage,
         len(samples),
     )
 
+    angle = math.degrees(math.atan(slope))
     return {
         "band_width": round(half_width * 2, 3),
         "samples": sampled_curve,
         "metadata": {
-            "angle_degrees": float(config.get("angle_degrees", 0) or 0),
+            "angle_degrees": round(angle, 3),
             "offset_seconds": offset,
             "baseline": round(baseline, 3),
             "slope": round(slope, 5),
             "source_points": len(samples),
+            "coverage_ratio": round(coverage, 3),
         },
     }
 
 
-def slope_from_config(config: dict, samples: List[StaSample]) -> float:
-    angle = float(config.get("angle_degrees", 0) or 0)
-    slope = math.tan(math.radians(angle)) if angle else 0.0
-    if slope > 0:
-        return slope
-    return fallback_slope(samples)
-
-
-def fallback_slope(samples: List[StaSample]) -> float:
-    xs = [sample.sta_seconds for sample in samples]
-    ys = [sample.distance_m for sample in samples]
-    if not xs or not ys:
-        return 0.1
-    x_span = max(xs) - min(xs)
-    y_span = max(ys) - min(ys)
-    if x_span <= 0:
-        return 0.1
-    return max(0.05, y_span / x_span)
+def compute_coverage(residuals: List[float], median: float, half_width: float) -> float:
+    if not residuals or half_width <= 0:
+        return 0.0
+    inside = sum(1 for res in residuals if abs(res - median) <= half_width)
+    return inside / len(residuals)
 
 
 def build_domain(samples: List[StaSample]) -> List[float]:
