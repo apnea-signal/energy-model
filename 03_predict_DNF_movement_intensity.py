@@ -22,9 +22,7 @@ DATASET_FILES: Dict[str, str] = {
 DEFAULT_DATA_ROOT = Path("data/aida_greece_2025")
 DEFAULT_OUTPUT = Path("data/dashboard_data/03_movement_intensity.json")
 DEFAULT_SPLIT_DISTANCE_M = 50.0
-DEFAULT_ARM_FORCE = 0.8
-DEFAULT_LEG_FORCE = 0.25
-DEFAULT_ARM_LEG_RATIO = 2.0  # assume one arm pull carries the load of two leg kicks
+DEFAULT_ARM_LEG_RATIO = 1.5  # assume one arm pull carries the load of 1.5 leg kicks
 
 
 @dataclass(frozen=True)
@@ -78,18 +76,6 @@ def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
         help="Distance in meters for the opening split (defaults to 50 m).",
     )
     parser.add_argument(
-        "--arm-force",
-        type=float,
-        default=DEFAULT_ARM_FORCE,
-        help="Baseline propulsion assigned to each arm pull.",
-    )
-    parser.add_argument(
-        "--leg-force",
-        type=float,
-        default=DEFAULT_LEG_FORCE,
-        help="Baseline propulsion assigned to each single-leg kick.",
-    )
-    parser.add_argument(
         "--arm-leg-ratio",
         type=float,
         default=DEFAULT_ARM_LEG_RATIO,
@@ -112,13 +98,8 @@ def main(argv: Sequence[str] | None = None) -> int:
         LOGGER.error("split_distance must be positive (got %s)", args.split_distance)
         return 1
 
-    arm_leg_ratio = resolve_ratio(args.arm_leg_ratio, arm_force=args.arm_force, leg_force=args.leg_force)
-    LOGGER.info(
-        "Using arm/leg ratio %.3f (arm_force=%.3f, leg_force=%.3f)",
-        arm_leg_ratio,
-        args.arm_force,
-        args.leg_force,
-    )
+    arm_leg_ratio = resolve_ratio(args.arm_leg_ratio)
+    LOGGER.info("Using arm/leg ratio %.3f", arm_leg_ratio)
 
     payload: Dict[str, dict] = {}
     for dataset in datasets:
@@ -137,7 +118,7 @@ def main(argv: Sequence[str] | None = None) -> int:
             continue
         summary = aggregate_by_athlete(records)
         payload[dataset] = {
-            "metadata": build_metadata(records, split_distance=args.split_distance, arm_leg_ratio=arm_leg_ratio, arm_force=args.arm_force, leg_force=args.leg_force),
+            "metadata": build_metadata(records, split_distance=args.split_distance, arm_leg_ratio=arm_leg_ratio),
             "athletes": summary,
         }
         LOGGER.info(
@@ -160,12 +141,10 @@ def main(argv: Sequence[str] | None = None) -> int:
     return 0
 
 
-def resolve_ratio(override: float | None, *, arm_force: float, leg_force: float) -> float:
-    if override is not None and override > 0:
-        return override
-    if leg_force <= 0:
-        raise ValueError("leg_force must be positive to derive the arm/leg ratio")
-    return arm_force / leg_force
+def resolve_ratio(override: float | None) -> float:
+    if override is None or override <= 0:
+        raise ValueError("arm_leg_ratio must be positive")
+    return override
 
 
 def compute_split_records(
@@ -294,8 +273,6 @@ def build_metadata(
     *,
     split_distance: float,
     arm_leg_ratio: float,
-    arm_force: float,
-    leg_force: float,
 ) -> dict:
     arm_median = median([record.arm_work_per_pull for record in records])
     leg_median = median_optional([record.leg_work_per_kick for record in records])
@@ -304,8 +281,6 @@ def build_metadata(
     movement_median = median_optional([record.movement_intensity for record in records])
     return {
         "split_distance_m": split_distance,
-        "arm_force": arm_force,
-        "leg_force": leg_force,
         "arm_leg_ratio": arm_leg_ratio,
         "arm_work_per_pull_median": round(arm_median, 4) if arm_median is not None else None,
         "leg_work_per_kick_median": round(leg_median, 4) if leg_median is not None else None,

@@ -8,6 +8,8 @@ const PARAMETER_ORDER = [
   "arm_o2_cost",
   "leg_o2_cost",
   "dolphin_o2_cost",
+  "intensity_time_o2_cost",
+  "anaerobic_recovery_o2_cost",
   "static_o2_rate",
 ];
 const PARAMETER_LABELS = {
@@ -15,6 +17,8 @@ const PARAMETER_LABELS = {
   arm_o2_cost: "Arm stroke O₂ cost",
   leg_o2_cost: "Leg kick O₂ cost",
   dolphin_o2_cost: "Dolphin O₂ cost",
+  intensity_time_o2_cost: "Intensity × time O₂ cost",
+  anaerobic_recovery_o2_cost: "Anaerobic recovery O₂ credit",
   static_o2_rate: "Static metabolic rate",
 };
 
@@ -23,6 +27,8 @@ const PARAMETER_SYMBOLS = {
   arm_o2_cost: "P_a",
   leg_o2_cost: "P_l",
   dolphin_o2_cost: "P_d",
+  intensity_time_o2_cost: "P_i",
+  anaerobic_recovery_o2_cost: "P_{ar}",
   static_o2_rate: "R_s",
 };
 
@@ -31,6 +37,8 @@ const PARAMETER_DESCRIPTIONS = {
   arm_o2_cost: "O₂ per arm cycle after intensity scaling.",
   leg_o2_cost: "O₂ per single-leg kick (stroke + post-push).",
   dolphin_o2_cost: "O₂ per stabilizing dolphin kick.",
+  intensity_time_o2_cost: "Heart-rate coupling term applied to intensity × swim time.",
+  anaerobic_recovery_o2_cost: "Anaerobic relief term that subtracts O₂ as time extends (negative).",
   static_o2_rate: "Baseline O₂ draw multiplied by swim duration.",
 };
 
@@ -244,7 +252,7 @@ function renderFormula() {
       <p class="note-lede">Equation</p>
       <p>
         <code>
-          O₂_{total} = I * (P_w N_w + P_a N_a + P_l N_l + P_d N_d) + R_s * T
+          O₂_{total} = I * (P_w N_w + P_a N_a + P_l N_l + P_d N_d + P_i T) + R_s * T - P_{ar} T
         </code>
       </p>
       <p>The Step 1 movement intensity multiplies every propulsion term before summing the static draw.</p>
@@ -730,6 +738,60 @@ function getAttemptColumns() {
       label: "Movement intensity",
       align: "right",
       render: (row) => formatNumber(row.movement_intensity, 3),
+    },
+    {
+      key: "arm_work_total",
+      label: "Arm O₂",
+      align: "right",
+      render: (row) => formatNumber(row.component_costs?.arm_o2_cost, 1, "s"),
+    },
+    {
+      key: "leg_work_total",
+      label: "Leg O₂",
+      align: "right",
+      render: (row) => formatNumber(row.component_costs?.leg_o2_cost, 1, "s"),
+    },
+    {
+      key: "wall_push_o2_cost",
+      label: "Wall O₂",
+      align: "right",
+      render: (row) => formatNumber(row.component_costs?.wall_push_o2_cost, 1, "s"),
+    },
+    {
+      key: "dolphin_o2_cost",
+      label: "Dolphin O₂",
+      align: "right",
+      render: (row) => formatNumber(row.component_costs?.dolphin_o2_cost, 1, "s"),
+    },
+    {
+      key: "intensity_time_o2_cost",
+      label: "HR O₂",
+      align: "right",
+      render: (row) => formatNumber(row.component_costs?.intensity_time_o2_cost, 1, "s"),
+    },
+    {
+      key: "anaerobic_recovery_o2_cost",
+      label: "Anaerobic O₂",
+      align: "right",
+      render: (row) => formatNumber(row.component_costs?.anaerobic_recovery_o2_cost, 1, "s"),
+    },
+    {
+      key: "static_o2_rate",
+      label: "Static O₂",
+      align: "right",
+      render: (row) => formatNumber(row.component_costs?.static_o2_rate, 1, "s"),
+    },
+    {
+      key: "arm_pulls",
+      label: "Arm pulls",
+      align: "right",
+      render: (row) => formatNumber(row.arm_pulls, 1),
+    },
+    {
+      key: "leg_kicks",
+      label: "Leg kicks",
+      align: "right",
+      render: (row) => formatNumber(row.leg_kicks, 1),
     },
   ];
 }

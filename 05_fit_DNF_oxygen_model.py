@@ -24,13 +24,31 @@ DEFAULT_DATA_ROOT = Path("data/aida_greece_2025")
 DEFAULT_STA_FILE = Path("data/aida_greece_2025/STA_PB.csv")
 DEFAULT_MOVEMENT_FILE = Path("data/dashboard_data/03_movement_intensity.json")
 DEFAULT_OUTPUT = Path("data/dashboard_data/05_propulsion_fit.json")
+GD_DEFAULT_PARAMS = {
+    "wall_push_o2_cost": 1.0,
+    "arm_o2_cost": 1.5,
+    "leg_o2_cost": 1.0,
+    "dolphin_o2_cost": 0.0,
+    "intensity_time_o2_cost": 0.0,
+    "anaerobic_recovery_o2_cost": 0.1,
+    "static_o2_rate": 1.8,
+}
+GD_LR = 1e-5
+GD_MAX_ITER = 40_000
+GD_TOL = 1e-6
+WALL_LEG_EPS = 1e-6
+ARM_LEG_RATIO_MAX = 1.5
+STATIC_MIN = 1.0
 PARAMETER_ORDER = [
     "wall_push_o2_cost",
     "arm_o2_cost",
     "leg_o2_cost",
     "dolphin_o2_cost",
+    "intensity_time_o2_cost",
+    "anaerobic_recovery_o2_cost",
     "static_o2_rate",
 ]
+MOVEMENT_PARAMETER_ORDER = PARAMETER_ORDER[:-1]
 
 
 @dataclass
@@ -55,6 +73,8 @@ class AttemptSample:
             self.arm_pulls * multiplier,
             self.leg_kicks * multiplier,
             self.dolphin_kicks * multiplier,
+            multiplier * self.total_time_s,
+            -self.total_time_s,
         ]
 
 
@@ -77,6 +97,8 @@ class OutputAttempt:
     residual_s: float
     features: Dict[str, float]
     component_costs: Dict[str, float]
+    arm_pulls: float
+    leg_kicks: float
 
 
 def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
@@ -280,18 +302,23 @@ def fit_parameters(samples: List[AttemptSample]) -> FitResult:
     raw_model = LinearRegression(fit_intercept=False)
     raw_model.fit(design, movement_targets)
     raw_solution = raw_model.coef_
-    constrained_model = LinearRegression(fit_intercept=False, positive=True)
-    constrained_model.fit(design, movement_targets)
-    constrained_solution = constrained_model.coef_
-    movement_predictions = constrained_model.predict(design)
+    weights = np.array([compute_sample_weight(sample, samples) for sample in samples], dtype=float)
+    constrained_solution = run_gradient_descent(
+        design,
+        movement_targets,
+        weights=weights,
+        initial=build_initial_params(),
+    )
+    movement_predictions = design @ constrained_solution
     total_times = np.array([sample.total_time_s for sample in samples], dtype=float)
     sta_targets = np.array([sample.sta_budget_s for sample in samples], dtype=float)
-    predictions = movement_predictions + total_times
+    static_rate = solve_static_rate(residual=sta_targets - movement_predictions, times=total_times)
+    predictions = movement_predictions + static_rate * total_times
     errors = predictions - sta_targets
-    movement_parameters = {name: float(value) for name, value in zip(PARAMETER_ORDER[:-1], constrained_solution)}
-    raw_movement_parameters = {name: float(value) for name, value in zip(PARAMETER_ORDER[:-1], raw_solution)}
-    parameters = {**movement_parameters, PARAMETER_ORDER[-1]: 1.0}
-    raw_parameters = {**raw_movement_parameters, PARAMETER_ORDER[-1]: 1.0}
+    movement_parameters = {name: float(value) for name, value in zip(MOVEMENT_PARAMETER_ORDER, constrained_solution)}
+    parameters = {**movement_parameters, PARAMETER_ORDER[-1]: static_rate}
+    raw_parameters = {name: float(value) for name, value in zip(MOVEMENT_PARAMETER_ORDER, raw_solution)}
+    raw_parameters[PARAMETER_ORDER[-1]] = STATIC_MIN
     LOGGER.info(
         "Non-negative fit: %s",
         ", ".join(f"%s=%.4f" % (name, value) for name, value in parameters.items()),
@@ -339,6 +366,8 @@ def format_output(dataset: str, samples: List[AttemptSample], fit: FitResult) ->
                 residual_s=float(residual),
                 features=feature_dict,
                 component_costs={k: round(v, 4) for k, v in component_costs.items()},
+                arm_pulls=sample.arm_pulls,
+                leg_kicks=sample.leg_kicks,
             )
         )
     residual_seconds = [abs(attempt.residual_s) for attempt in attempts]
@@ -359,7 +388,7 @@ def format_output(dataset: str, samples: List[AttemptSample], fit: FitResult) ->
         },
         "attempts": [attempt_to_dict(entry) for entry in attempts],
         "parameter_order": list(PARAMETER_ORDER),
-        "design_note": "Fit solves for (STA - swim_time) using intensity-scaled movement counts; swim_time is added back afterward",
+        "design_note": "Fit solves for (STA - swim_time) using intensity-scaled movement counts plus heart-rate and anaerobic time terms; swim_time is added back afterward",
     }
     return payload
 
@@ -374,6 +403,69 @@ def compute_mean_abs_pct_error(attempts: Iterable[OutputAttempt]) -> float:
     return float(sum(errors) / len(errors))
 
 
+def build_initial_params() -> np.ndarray:
+    values = [GD_DEFAULT_PARAMS.get(name, 1.0) for name in MOVEMENT_PARAMETER_ORDER]
+    return np.array(values, dtype=float)
+
+
+def compute_sample_weight(sample: AttemptSample, samples: List[AttemptSample]) -> float:
+    return 1.0
+
+
+def run_gradient_descent(
+    design: np.ndarray,
+    targets: np.ndarray,
+    *,
+    weights: np.ndarray,
+    initial: np.ndarray,
+) -> np.ndarray:
+    params = np.maximum(initial.copy(), 0.0)
+    if weights.shape[0] != targets.shape[0]:
+        weights = np.ones_like(targets)
+    weight_sum = float(np.sum(weights)) or float(len(targets))
+    for iteration in range(GD_MAX_ITER):
+        preds = design @ params
+        residuals = preds - targets
+        grad = (design.T @ (weights * residuals)) / weight_sum
+        update = GD_LR * grad
+        params -= update
+        params = np.maximum(params, 0.0)
+        enforce_hierarchy_constraints(params)
+        if np.linalg.norm(update) < GD_TOL:
+            LOGGER.debug("Gradient descent converged after %d iterations", iteration + 1)
+            break
+    else:
+            LOGGER.debug("Gradient descent reached max iterations (%d)", GD_MAX_ITER)
+    return params
+
+
+def solve_static_rate(residual: np.ndarray, times: np.ndarray) -> float:
+    if residual.size == 0 or times.size == 0:
+        return STATIC_MIN
+    numerator = np.dot(residual, times)
+    denominator = np.dot(times, times)
+    if denominator <= 0:
+        return STATIC_MIN
+    rate = numerator / denominator
+    return max(rate, STATIC_MIN)
+
+
+def enforce_hierarchy_constraints(params: np.ndarray) -> None:
+    try:
+        wall_idx = MOVEMENT_PARAMETER_ORDER.index("wall_push_o2_cost")
+        leg_idx = MOVEMENT_PARAMETER_ORDER.index("leg_o2_cost")
+        arm_idx = MOVEMENT_PARAMETER_ORDER.index("arm_o2_cost")
+    except ValueError:
+        return
+    if params[wall_idx] < params[leg_idx]:
+        params[wall_idx] = params[leg_idx] + WALL_LEG_EPS
+    leg_value = params[leg_idx]
+    if leg_value > 0:
+        max_arm = leg_value * ARM_LEG_RATIO_MAX
+        if params[arm_idx] > max_arm:
+            params[arm_idx] = max_arm
+
+
 def attempt_to_dict(entry: OutputAttempt) -> dict:
     return {
         "name": entry.name,
@@ -385,6 +477,8 @@ def attempt_to_dict(entry: OutputAttempt) -> dict:
         "residual_s": round(entry.residual_s, 3),
         "features": entry.features,
         "component_costs": entry.component_costs,
+        "arm_pulls": round(entry.arm_pulls, 3),
+        "leg_kicks": round(entry.leg_kicks, 3),
     }
 
 

@@ -2,13 +2,11 @@
   "DNF": {
     "metadata": {
       "split_distance_m": 50.0,
-      "arm_force": 0.8,
-      "leg_force": 0.25,
-      "arm_leg_ratio": 2.0,
-      "arm_work_per_pull_median": 4.3497,
-      "leg_work_per_kick_median": 2.1749,
-      "arm_work_total_median": 25.0,
-      "leg_work_total_median": 14.5861,
+      "arm_leg_ratio": 1.5,
+      "arm_work_per_pull_median": 3.874,
+      "leg_work_per_kick_median": 2.5826,
+      "arm_work_total_median": 22.2949,
+      "leg_work_total_median": 16.6832,
       "movement_intensity_median": 1.0
     },
     "athletes": [
@@ -19,12 +17,12 @@
         "split_speed_m_s": 0.8621,
         "arm_pulls": 5.5,
         "leg_kicks": 5.5,
-        "arm_work_per_pull": 4.504,
-        "leg_work_per_kick": 2.252,
-        "arm_work_total": 24.7721,
-        "leg_work_total": 12.386,
-        "leg_arm_work_ratio": 0.5,
-        "movement_intensity": 1.0355
+        "arm_work_per_pull": 4.0536,
+        "leg_work_per_kick": 2.7024,
+        "arm_work_total": 22.2949,
+        "leg_work_total": 14.8633,
+        "leg_arm_work_ratio": 0.6667,
+        "movement_intensity": 1.0464
       },
       {
         "name": "BOURDILA Guillaume",
@@ -33,12 +31,12 @@
         "split_speed_m_s": 0.8621,
         "arm_pulls": 4.5,
         "leg_kicks": 5.5,
-        "arm_work_per_pull": 5.1253,
-        "leg_work_per_kick": 2.5626,
-        "arm_work_total": 23.0637,
-        "leg_work_total": 14.0945,
-        "leg_arm_work_ratio": 0.6111,
-        "movement_intensity": 1.1783
+        "arm_work_per_pull": 4.55,
+        "leg_work_per_kick": 3.0333,
+        "arm_work_total": 20.4749,
+        "leg_work_total": 16.6832,
+        "leg_arm_work_ratio": 0.8148,
+        "movement_intensity": 1.1745
       },
       {
         "name": "BRIANTSEV Mikhail",
@@ -47,12 +45,12 @@
         "split_speed_m_s": 0.9434,
         "arm_pulls": 7.5,
         "leg_kicks": 8.5,
-        "arm_work_per_pull": 3.7872,
-        "leg_work_per_kick": 1.8936,
-        "arm_work_total": 28.4041,
-        "leg_work_total": 16.0957,
-        "leg_arm_work_ratio": 0.5667,
-        "movement_intensity": 0.8707
+        "arm_work_per_pull": 3.3797,
+        "leg_work_per_kick": 2.2532,
+        "arm_work_total": 25.348,
+        "leg_work_total": 19.1518,
+        "leg_arm_work_ratio": 0.7556,
+        "movement_intensity": 0.8724
       },
       {
         "name": "CERIMAGIC Enes",
@@ -61,11 +59,11 @@
         "split_speed_m_s": 0.9091,
         "arm_pulls": 6.0,
         "leg_kicks": 7.0,
-        "arm_work_per_pull": 4.3497,
-        "leg_work_per_kick": 2.1749,
-        "arm_work_total": 26.0983,
-        "leg_work_total": 15.224,
-        "leg_arm_work_ratio": 0.5833,
+        "arm_work_per_pull": 3.874,
+        "leg_work_per_kick": 2.5826,
+        "arm_work_total": 23.2438,
+        "leg_work_total": 18.0785,
+        "leg_arm_work_ratio": 0.7778,
         "movement_intensity": 1.0
       },
       {
@@ -75,12 +73,12 @@
         "split_speed_m_s": 0.9434,
         "arm_pulls": 5.0,
         "leg_kicks": 5.0,
-        "arm_work_per_pull": 5.9333,
-        "leg_work_per_kick": 2.9667,
-        "arm_work_total": 29.6665,
-        "leg_work_total": 14.8333,
-        "leg_arm_work_ratio": 0.5,
-        "movement_intensity": 1.3641
+        "arm_work_per_pull": 5.34,
+        "leg_work_per_kick": 3.56,
+        "arm_work_total": 26.6999,
+        "leg_work_total": 17.7999,
+        "leg_arm_work_ratio": 0.6667,
+        "movement_intensity": 1.3784
       },
       {
         "name": "DE WET Anton",
@@ -89,12 +87,12 @@
         "split_speed_m_s": 0.8621,
         "arm_pulls": 8.0,
         "leg_kicks": 8.0,
-        "arm_work_per_pull": 3.0965,
-        "leg_work_per_kick": 1.5483,
-        "arm_work_total": 24.7721,
-        "leg_work_total": 12.386,
-        "leg_arm_work_ratio": 0.5,
-        "movement_intensity": 0.7119
+        "arm_work_per_pull": 2.7869,
+        "leg_work_per_kick": 1.8579,
+        "arm_work_total": 22.2949,
+        "leg_work_total": 14.8633,
+        "leg_arm_work_ratio": 0.6667,
+        "movement_intensity": 0.7194
       },
       {
         "name": "ELU Olivier",
@@ -103,12 +101,12 @@
         "split_speed_m_s": 0.9615,
         "arm_pulls": 5.5,
         "leg_kicks": 6.5,
-        "arm_work_per_pull": 5.2832,
-        "leg_work_per_kick": 2.6416,
-        "arm_work_total": 29.0575,
-        "leg_work_total": 17.1703,
-        "leg_arm_work_ratio": 0.5909,
-        "movement_intensity": 1.2146
+        "arm_work_per_pull": 4.7011,
+        "leg_work_per_kick": 3.1341,
+        "arm_work_total": 25.8562,
+        "leg_work_total": 20.3716,
+        "leg_arm_work_ratio": 0.7879,
+        "movement_intensity": 1.2135
       },
       {
         "name": "GENERALI Mauro",
@@ -117,12 +115,12 @@
         "split_speed_m_s": 0.8197,
         "arm_pulls": 3.5,
         "leg_kicks": 13.5,
-        "arm_work_per_pull": 3.2774,
-        "leg_work_per_kick": 1.6387,
-        "arm_work_total": 11.4708,
-        "leg_work_total": 22.1223,
-        "leg_arm_work_ratio": 1.9286,
-        "movement_intensity": 0.7535
+        "arm_work_per_pull": 2.6874,
+        "leg_work_per_kick": 1.7916,
+        "arm_work_total": 9.4061,
+        "leg_work_total": 24.187,
+        "leg_arm_work_ratio": 2.5714,
+        "movement_intensity": 0.6937
       },
       {
         "name": "KIM Hakyong",
@@ -131,12 +129,12 @@
         "split_speed_m_s": 0.8621,
         "arm_pulls": 10.0,
         "leg_kicks": 10.0,
-        "arm_work_per_pull": 2.4772,
-        "leg_work_per_kick": 1.2386,
-        "arm_work_total": 24.7721,
-        "leg_work_total": 12.386,
-        "leg_arm_work_ratio": 0.5,
-        "movement_intensity": 0.5695
+        "arm_work_per_pull": 2.2295,
+        "leg_work_per_kick": 1.4863,
+        "arm_work_total": 22.2949,
+        "leg_work_total": 14.8633,
+        "leg_arm_work_ratio": 0.6667,
+        "movement_intensity": 0.5755
       },
       {
         "name": "KUBIAK Piotr",
@@ -145,12 +143,12 @@
         "split_speed_m_s": 0.8929,
         "arm_pulls": 6.0,
         "leg_kicks": 6.0,
-        "arm_work_per_pull": 4.4289,
-        "leg_work_per_kick": 2.2144,
-        "arm_work_total": 26.5731,
-        "leg_work_total": 13.2866,
-        "leg_arm_work_ratio": 0.5,
-        "movement_intensity": 1.0182
+        "arm_work_per_pull": 3.986,
+        "leg_work_per_kick": 2.6573,
+        "arm_work_total": 23.9158,
+        "leg_work_total": 15.9439,
+        "leg_arm_work_ratio": 0.6667,
+        "movement_intensity": 1.0289
       },
       {
         "name": "LEE Po-Yen",
@@ -159,12 +157,12 @@
         "split_speed_m_s": 1.0,
         "arm_pulls": 6.0,
         "leg_kicks": 12.0,
-        "arm_work_per_pull": 4.1667,
-        "leg_work_per_kick": 2.0833,
-        "arm_work_total": 25.0,
-        "leg_work_total": 25.0,
-        "leg_arm_work_ratio": 1.0,
-        "movement_intensity": 0.9579
+        "arm_work_per_pull": 3.5714,
+        "leg_work_per_kick": 2.381,
+        "arm_work_total": 21.4286,
+        "leg_work_total": 28.5714,
+        "leg_arm_work_ratio": 1.3333,
+        "movement_intensity": 0.9219
       },
       {
         "name": "MAKSIMOV Aleksandr",
@@ -173,12 +171,12 @@
         "split_speed_m_s": 0.8475,
         "arm_pulls": 7.5,
         "leg_kicks": 7.5,
-        "arm_work_per_pull": 3.1919,
-        "leg_work_per_kick": 1.596,
-        "arm_work_total": 23.9395,
-        "leg_work_total": 11.9697,
-        "leg_arm_work_ratio": 0.5,
-        "movement_intensity": 0.7338
+        "arm_work_per_pull": 2.8727,
+        "leg_work_per_kick": 1.9152,
+        "arm_work_total": 21.5455,
+        "leg_work_total": 14.3637,
+        "leg_arm_work_ratio": 0.6667,
+        "movement_intensity": 0.7415
       },
       {
         "name": "MALINA Mateusz",
@@ -187,12 +185,12 @@
         "split_speed_m_s": 0.9615,
         "arm_pulls": 7.5,
         "leg_kicks": 7.5,
-        "arm_work_per_pull": 4.1091,
-        "leg_work_per_kick": 2.0546,
-        "arm_work_total": 30.8185,
-        "leg_work_total": 15.4093,
-        "leg_arm_work_ratio": 0.5,
-        "movement_intensity": 0.9447
+        "arm_work_per_pull": 3.6982,
+        "leg_work_per_kick": 2.4655,
+        "arm_work_total": 27.7367,
+        "leg_work_total": 18.4911,
+        "leg_arm_work_ratio": 0.6667,
+        "movement_intensity": 0.9546
       },
       {
         "name": "MILOSIC Boris",
@@ -201,12 +199,12 @@
         "split_speed_m_s": 0.7246,
         "arm_pulls": 4.0,
         "leg_kicks": 10.0,
-        "arm_work_per_pull": 2.9172,
-        "leg_work_per_kick": 1.4586,
-        "arm_work_total": 11.6689,
-        "leg_work_total": 14.5861,
-        "leg_arm_work_ratio": 1.25,
-        "movement_intensity": 0.6707
+        "arm_work_per_pull": 2.4614,
+        "leg_work_per_kick": 1.6409,
+        "arm_work_total": 9.8456,
+        "leg_work_total": 16.4094,
+        "leg_arm_work_ratio": 1.6667,
+        "movement_intensity": 0.6354
       },
       {
         "name": "NYMO Carl-Oscar",
@@ -215,12 +213,12 @@
         "split_speed_m_s": 0.8621,
         "arm_pulls": 5.5,
         "leg_kicks": 5.5,
-        "arm_work_per_pull": 4.504,
-        "leg_work_per_kick": 2.252,
-        "arm_work_total": 24.7721,
-        "leg_work_total": 12.386,
-        "leg_arm_work_ratio": 0.5,
-        "movement_intensity": 1.0355
+        "arm_work_per_pull": 4.0536,
+        "leg_work_per_kick": 2.7024,
+        "arm_work_total": 22.2949,
+        "leg_work_total": 14.8633,
+        "leg_arm_work_ratio": 0.6667,
+        "movement_intensity": 1.0464
       },
       {
         "name": "PAVKOVIC Nenad",
@@ -229,12 +227,12 @@
         "split_speed_m_s": 0.8772,
         "arm_pulls": 2.5,
         "leg_kicks": 10.5,
-        "arm_work_per_pull": 4.9643,
-        "leg_work_per_kick": 2.4822,
-        "arm_work_total": 12.4108,
-        "leg_work_total": 26.0626,
-        "leg_arm_work_ratio": 2.1,
-        "movement_intensity": 1.1413
+        "arm_work_per_pull": 4.0498,
+        "leg_work_per_kick": 2.6999,
+        "arm_work_total": 10.1246,
+        "leg_work_total": 28.3488,
+        "leg_arm_work_ratio": 2.8,
+        "movement_intensity": 1.0454
       },
       {
         "name": "PELES Vanja",
@@ -243,12 +241,12 @@
         "split_speed_m_s": 0.9091,
         "arm_pulls": 5.5,
         "leg_kicks": 5.5,
-        "arm_work_per_pull": 5.0088,
-        "leg_work_per_kick": 2.5044,
-        "arm_work_total": 27.5482,
-        "leg_work_total": 13.7741,
-        "leg_arm_work_ratio": 0.5,
-        "movement_intensity": 1.1515
+        "arm_work_per_pull": 4.5079,
+        "leg_work_per_kick": 3.0053,
+        "arm_work_total": 24.7934,
+        "leg_work_total": 16.5289,
+        "leg_arm_work_ratio": 0.6667,
+        "movement_intensity": 1.1636
       },
       {
         "name": "QUESADA Francisco",
@@ -257,12 +255,12 @@
         "split_speed_m_s": 1.0638,
         "arm_pulls": 5.0,
         "leg_kicks": 5.0,
-        "arm_work_per_pull": 7.5449,
-        "leg_work_per_kick": 3.7724,
-        "arm_work_total": 37.7245,
-        "leg_work_total": 18.8622,
-        "leg_arm_work_ratio": 0.5,
-        "movement_intensity": 1.7346
+        "arm_work_per_pull": 6.7904,
+        "leg_work_per_kick": 4.5269,
+        "arm_work_total": 33.952,
+        "leg_work_total": 22.6347,
+        "leg_arm_work_ratio": 0.6667,
+        "movement_intensity": 1.7528
       },
       {
         "name": "RULAND Fernando",
@@ -271,12 +269,12 @@
         "split_speed_m_s": 0.8621,
         "arm_pulls": 5.5,
         "leg_kicks": 5.5,
-        "arm_work_per_pull": 4.504,
-        "leg_work_per_kick": 2.252,
-        "arm_work_total": 24.7721,
-        "leg_work_total": 12.386,
-        "leg_arm_work_ratio": 0.5,
-        "movement_intensity": 1.0355
+        "arm_work_per_pull": 4.0536,
+        "leg_work_per_kick": 2.7024,
+        "arm_work_total": 22.2949,
+        "leg_work_total": 14.8633,
+        "leg_arm_work_ratio": 0.6667,
+        "movement_intensity": 1.0464
       },
       {
         "name": "SADAN Valentin",
@@ -285,12 +283,12 @@
         "split_speed_m_s": 1.0,
         "arm_pulls": 8.0,
         "leg_kicks": 16.0,
-        "arm_work_per_pull": 3.125,
-        "leg_work_per_kick": 1.5625,
-        "arm_work_total": 25.0,
-        "leg_work_total": 25.0,
-        "leg_arm_work_ratio": 1.0,
-        "movement_intensity": 0.7184
+        "arm_work_per_pull": 2.6786,
+        "leg_work_per_kick": 1.7857,
+        "arm_work_total": 21.4286,
+        "leg_work_total": 28.5714,
+        "leg_arm_work_ratio": 1.3333,
+        "movement_intensity": 0.6914
       },
       {
         "name": "SOPRONYI Andras",
@@ -299,12 +297,12 @@
         "split_speed_m_s": 0.9091,
         "arm_pulls": 6.5,
         "leg_kicks": 6.5,
-        "arm_work_per_pull": 4.2382,
-        "leg_work_per_kick": 2.1191,
-        "arm_work_total": 27.5482,
-        "leg_work_total": 13.7741,
-        "leg_arm_work_ratio": 0.5,
-        "movement_intensity": 0.9744
+        "arm_work_per_pull": 3.8144,
+        "leg_work_per_kick": 2.5429,
+        "arm_work_total": 24.7934,
+        "leg_work_total": 16.5289,
+        "leg_arm_work_ratio": 0.6667,
+        "movement_intensity": 0.9846
       }
     ]
   }

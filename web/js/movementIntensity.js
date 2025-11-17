@@ -1,7 +1,10 @@
 import * as d3 from "https://cdn.jsdelivr.net/npm/d3@7/+esm";
 import { createChartTooltip } from "./utils.js";
 
-const DATA_URL = "../data/dashboard_data/03_movement_intensity.json";
+const CACHE_BUST_TOKEN = Date.now().toString(36);
+const DATA_URL = withCacheBust("../data/dashboard_data/03_movement_intensity.json");
+const DEFAULT_RATIO = 1.5;
+const DEFAULT_SPLIT_DISTANCE = 50;
 
 const datasetMenu = document.getElementById("datasetMenu");
 const datasetLabelEl = document.getElementById("datasetLabel");
@@ -12,14 +15,22 @@ const scatterNoteEl = document.getElementById("scatterNote");
 const leaderboardGridEl = document.getElementById("leaderboardGrid");
 const tableContainer = document.getElementById("athleteTable");
 const highlightSelect = document.getElementById("highlightSelect");
+const ratioSlider = document.getElementById("ratioSlider");
+const ratioInput = document.getElementById("ratioInput");
+const ratioResetButton = document.getElementById("ratioReset");
 
 const state = {
   payload: {},
   datasets: [],
   dataset: null,
+  baseAthletes: [],
+  baseMetadata: {},
   athletes: [],
   metadata: {},
+  ratio: DEFAULT_RATIO,
 };
+
+let ratioControlsBound = false;
 
 let tableSort = { key: "arm_stroke_intensity", direction: "descending" };
 
@@ -28,6 +39,8 @@ if (highlightSelect) {
     highlightPoints(highlightSelect.value);
   });
 }
+
+bindRatioControls();
 
 init();
 
@@ -67,6 +80,22 @@ function renderDatasetNav() {
   });
 }
 
+function bindRatioControls() {
+  if (ratioControlsBound) {
+    return;
+  }
+  if (ratioSlider) {
+    ratioSlider.addEventListener("input", () => handleRatioChange(Number(ratioSlider.value)));
+  }
+  if (ratioInput) {
+    ratioInput.addEventListener("change", () => handleRatioChange(Number(ratioInput.value)));
+  }
+  if (ratioResetButton) {
+    ratioResetButton.addEventListener("click", () => resetRatio());
+  }
+  ratioControlsBound = true;
+}
+
 function setDataset(dataset) {
   const entry = state.payload[dataset];
   if (!entry) {
@@ -74,14 +103,155 @@ function setDataset(dataset) {
     return;
   }
   state.dataset = dataset;
-  state.athletes = Array.isArray(entry.athletes) ? entry.athletes : [];
-  state.metadata = entry.metadata || {};
+  state.baseAthletes = Array.isArray(entry.athletes) ? entry.athletes : [];
+  state.baseMetadata = entry.metadata || {};
+  const baseRatio = Number(state.baseMetadata.arm_leg_ratio);
+  state.ratio = Number.isFinite(baseRatio) && baseRatio > 0 ? baseRatio : DEFAULT_RATIO;
+  updateRatioControls();
+  recomputeAthletesFromRatio();
   updateDatasetNavState();
   renderSummary();
   renderLeaderboards();
   renderTable();
   renderScatter();
   populateHighlightSelect();
+}
+
+function handleRatioChange(value) {
+  if (!Number.isFinite(value)) {
+    return;
+  }
+  const clamped = Math.max(0.1, value);
+  state.ratio = clamped;
+  updateRatioControls();
+  applyRatioChange();
+}
+
+function resetRatio() {
+  const baseRatio = Number(state.baseMetadata?.arm_leg_ratio);
+  state.ratio = Number.isFinite(baseRatio) && baseRatio > 0 ? baseRatio : DEFAULT_RATIO;
+  updateRatioControls();
+  applyRatioChange();
+}
+
+function updateRatioControls() {
+  const ratioValue = Math.max(0.1, Number(state.ratio) || DEFAULT_RATIO);
+  if (ratioSlider) {
+    const sliderMin = Number(ratioSlider.min) || 0.1;
+    if (ratioValue < sliderMin) {
+      ratioSlider.min = ratioValue.toFixed(2);
+    }
+    const sliderMax = Number(ratioSlider.max) || 5;
+    if (ratioValue > sliderMax) {
+      ratioSlider.max = ratioValue.toFixed(2);
+    }
+    ratioSlider.value = ratioValue.toFixed(2);
+  }
+  if (ratioInput) {
+    ratioInput.value = ratioValue.toFixed(2);
+  }
+}
+
+function applyRatioChange() {
+  if (!state.dataset) {
+    return;
+  }
+  recomputeAthletesFromRatio();
+  renderSummary();
+  renderLeaderboards();
+  renderTable();
+  renderScatter();
+}
+
+function recomputeAthletesFromRatio() {
+  const ratio = Math.max(0.1, Number(state.ratio) || DEFAULT_RATIO);
+  state.ratio = ratio;
+  const base = state.baseAthletes || [];
+  const splitDistanceRaw = Number(state.baseMetadata?.split_distance_m);
+  const splitDistance = Number.isFinite(splitDistanceRaw) && splitDistanceRaw > 0 ? splitDistanceRaw : DEFAULT_SPLIT_DISTANCE;
+  const derived = base.map((athlete) => recomputeAthleteMetrics(athlete, ratio, splitDistance));
+  const medians = computeWorkMedians(derived);
+  const athletesWithIntensity = derived.map((athlete) => {
+    const armIntensity = medians.armWorkPerPullMedian
+      ? athlete.arm_work_per_pull / medians.armWorkPerPullMedian
+      : null;
+    const legIntensity = medians.legWorkPerKickMedian && Number.isFinite(athlete.leg_work_per_kick)
+      ? athlete.leg_work_per_kick / medians.legWorkPerKickMedian
+      : null;
+    return {
+      ...athlete,
+      movement_intensity: combineIntensities([armIntensity, legIntensity]),
+    };
+  });
+  const movementMedian = med(athletesWithIntensity.map((row) => row.movement_intensity));
+  state.athletes = athletesWithIntensity;
+  state.metadata = {
+    ...state.baseMetadata,
+    split_distance_m: splitDistance,
+    arm_leg_ratio: ratio,
+    arm_work_per_pull_median: medians.armWorkPerPullMedian,
+    leg_work_per_kick_median: medians.legWorkPerKickMedian,
+    arm_work_total_median: medians.armWorkTotalMedian,
+    leg_work_total_median: medians.legWorkTotalMedian,
+    movement_intensity_median: movementMedian,
+  };
+}
+
+function recomputeAthleteMetrics(athlete, ratio, splitDistance) {
+  const splitTime = Number(athlete.split_time_s);
+  const armPulls = Number(athlete.arm_pulls);
+  const legKicks = Number(athlete.leg_kicks);
+  if (!Number.isFinite(splitTime) || splitTime <= 0 || !Number.isFinite(armPulls) || armPulls <= 0) {
+    return { ...athlete };
+  }
+  const distance = splitDistance || DEFAULT_SPLIT_DISTANCE;
+  const speed = distance / splitTime;
+  const totalWork = distance * speed * speed;
+  const armShare = computeArmShare(armPulls, legKicks, ratio);
+  const armWorkTotal = totalWork * armShare;
+  const legWorkTotal = totalWork - armWorkTotal;
+  const legKickCount = Number.isFinite(legKicks) ? Math.max(legKicks, 0) : 0;
+  const armWorkPerPull = armWorkTotal / armPulls;
+  const legWorkPerKick = legKickCount > 0 ? legWorkTotal / legKickCount : null;
+  const legArmWorkRatio = armWorkTotal > 0 ? legWorkTotal / armWorkTotal : null;
+  return {
+    ...athlete,
+    split_speed_m_s: speed,
+    arm_work_total: armWorkTotal,
+    leg_work_total: legWorkTotal,
+    arm_work_per_pull: armWorkPerPull,
+    leg_work_per_kick: legWorkPerKick,
+    leg_arm_work_ratio: legArmWorkRatio,
+  };
+}
+
+function computeWorkMedians(rows) {
+  return {
+    armWorkPerPullMedian: med(rows.map((row) => row.arm_work_per_pull)),
+    legWorkPerKickMedian: med(rows.map((row) => row.leg_work_per_kick)),
+    armWorkTotalMedian: med(rows.map((row) => row.arm_work_total)),
+    legWorkTotalMedian: med(rows.map((row) => row.leg_work_total)),
+  };
+}
+
+function combineIntensities(values) {
+  const filtered = values.filter((value) => Number.isFinite(value));
+  if (!filtered.length) {
+    return null;
+  }
+  const sum = filtered.reduce((acc, value) => acc + value, 0);
+  return sum / filtered.length;
+}
+
+function computeArmShare(armPulls, legKicks, ratio) {
+  const safeArms = Number.isFinite(armPulls) && armPulls > 0 ? armPulls : 0;
+  const safeLegs = Number.isFinite(legKicks) && legKicks > 0 ? legKicks : 0;
+  const numerator = ratio * safeArms;
+  const denominator = numerator + safeLegs;
+  if (denominator <= 0) {
+    return 0;
+  }
+  return numerator / denominator;
 }
 
 function updateDatasetNavState() {
@@ -547,6 +717,14 @@ async function fetchJson(url) {
     throw new Error(`${response.status} ${response.statusText}`);
   }
   return response.json();
+}
+
+function withCacheBust(url) {
+  if (!url) {
+    return url;
+  }
+  const separator = url.includes("?") ? "&" : "?";
+  return `${url}${separator}cb=${CACHE_BUST_TOKEN}`;
 }
 
 function renderError(message) {

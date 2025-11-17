@@ -32,6 +32,17 @@
           <h2>Dataset Summary</h2>
           <p id="datasetLabel" class="muted"></p>
         </div>
+        <div class="controls" id="ratioControls">
+          <label>
+            Arm / leg ratio
+            <input type="range" id="ratioSlider" min="0.5" max="4" step="0.1" />
+          </label>
+          <label>
+            Selected ratio
+            <input type="number" id="ratioInput" step="0.1" min="0.1" />
+          </label>
+          <button type="button" id="ratioReset" class="button">Reset ratio</button>
+        </div>
         <div id="metadataStats" class="stats-grid"></div>
         <aside id="metadataNote" class="note-shelf"></aside>
       </section>

@@ -2,25 +2,29 @@
   "DNF": {
     "dataset": "DNF",
     "parameters": {
-      "wall_push_o2_cost": 0.0,
-      "arm_o2_cost": 6.334626,
-      "leg_o2_cost": 1.645195,
+      "wall_push_o2_cost": 2.449427,
+      "arm_o2_cost": 3.674139,
+      "leg_o2_cost": 2.449426,
       "dolphin_o2_cost": 0.0,
-      "static_o2_rate": 1.0
+      "intensity_time_o2_cost": 0.132565,
+      "anaerobic_recovery_o2_cost": 0.0,
+      "static_o2_rate": 1.052412
     },
     "unconstrained_parameters": {
-      "wall_push_o2_cost": -1.385494,
-      "arm_o2_cost": 7.17994,
-      "leg_o2_cost": 1.45388,
-      "dolphin_o2_cost": -2.075693,
+      "wall_push_o2_cost": 21.394433,
+      "arm_o2_cost": 1.048503,
+      "leg_o2_cost": -0.812017,
+      "dolphin_o2_cost": 1.113842,
+      "intensity_time_o2_cost": -1.011223,
+      "anaerobic_recovery_o2_cost": -1.545097,
       "static_o2_rate": 1.0
     },
     "metrics": {
       "attempts": 19,
-      "mean_abs_error_s": 62.2728,
-      "median_abs_error_s": 46.1512,
-      "max_abs_error_s": 242.5197,
-      "mean_abs_pct_error": 0.1583
+      "mean_abs_error_s": 62.0455,
+      "median_abs_error_s": 57.7604,
+      "max_abs_error_s": 234.6989,
+      "mean_abs_pct_error": 0.1586
     },
     "attempts": [
       {
@@ -28,138 +32,174 @@
         "distance_m": 239.0,
         "total_time_s": 265.0,
         "sta_budget_s": 575.0,
-        "movement_intensity": 0.9447,
-        "prediction_s": 528.849,
-        "residual_s": -46.151,
+        "movement_intensity": 0.9546,
+        "prediction_s": 528.71,
+        "residual_s": -46.29,
         "features": {
-          "wall_push_o2_cost": 4.7235,
-          "arm_o2_cost": 33.0645,
-          "leg_o2_cost": 33.0645,
+          "wall_push_o2_cost": 4.773,
+          "arm_o2_cost": 33.411,
+          "leg_o2_cost": 33.411,
           "dolphin_o2_cost": 0.0,
+          "intensity_time_o2_cost": 252.969,
+          "anaerobic_recovery_o2_cost": -265.0,
           "static_o2_rate": 265.0
         },
         "component_costs": {
-          "wall_push_o2_cost": 0.0,
-          "arm_o2_cost": 209.4512,
-          "leg_o2_cost": 54.3976,
+          "wall_push_o2_cost": 11.6911,
+          "arm_o2_cost": 122.7567,
+          "leg_o2_cost": 81.8378,
           "dolphin_o2_cost": 0.0,
-          "static_o2_rate": 265.0
-        }
+          "intensity_time_o2_cost": 33.5347,
+          "anaerobic_recovery_o2_cost": -0.0,
+          "static_o2_rate": 278.8892
+        },
+        "arm_pulls": 35.0,
+        "leg_kicks": 35.0
       },
       {
         "name": "CHAN Kai-Hsiang",
         "distance_m": 235.5,
         "total_time_s": 275.0,
         "sta_budget_s": 521.0,
-        "movement_intensity": 1.3641,
-        "prediction_s": 498.148,
-        "residual_s": -22.852,
+        "movement_intensity": 1.3784,
+        "prediction_s": 529.58,
+        "residual_s": 8.58,
         "features": {
-          "wall_push_o2_cost": 6.8205,
-          "arm_o2_cost": 27.9641,
-          "leg_o2_cost": 27.9641,
-          "dolphin_o2_cost": 27.9641,
+          "wall_push_o2_cost": 6.892,
+          "arm_o2_cost": 28.2572,
+          "leg_o2_cost": 28.2572,
+          "dolphin_o2_cost": 28.2572,
+          "intensity_time_o2_cost": 379.06,
+          "anaerobic_recovery_o2_cost": -275.0,
           "static_o2_rate": 275.0
         },
         "component_costs": {
-          "wall_push_o2_cost": 0.0,
-          "arm_o2_cost": 177.1418,
-          "leg_o2_cost": 46.0063,
+          "wall_push_o2_cost": 16.8815,
+          "arm_o2_cost": 103.8209,
+          "leg_o2_cost": 69.2139,
           "dolphin_o2_cost": 0.0,
-          "static_o2_rate": 275.0
-        }
+          "intensity_time_o2_cost": 50.25,
+          "anaerobic_recovery_o2_cost": -0.0,
+          "static_o2_rate": 289.4134
+        },
+        "arm_pulls": 20.5,
+        "leg_kicks": 20.5
       },
       {
         "name": "KUBIAK Piotr",
         "distance_m": 225.5,
         "total_time_s": 239.0,
         "sta_budget_s": 512.0,
-        "movement_intensity": 1.0182,
-        "prediction_s": 442.126,
-        "residual_s": -69.874,
+        "movement_intensity": 1.0289,
+        "prediction_s": 454.24,
+        "residual_s": -57.76,
         "features": {
-          "wall_push_o2_cost": 5.091,
-          "arm_o2_cost": 25.455,
-          "leg_o2_cost": 25.455,
+          "wall_push_o2_cost": 5.1445,
+          "arm_o2_cost": 25.7225,
+          "leg_o2_cost": 25.7225,
           "dolphin_o2_cost": 0.0,
+          "intensity_time_o2_cost": 245.9071,
+          "anaerobic_recovery_o2_cost": -239.0,
           "static_o2_rate": 239.0
         },
         "component_costs": {
-          "wall_push_o2_cost": 0.0,
-          "arm_o2_cost": 161.2479,
-          "leg_o2_cost": 41.8784,
+          "wall_push_o2_cost": 12.6011,
+          "arm_o2_cost": 94.508,
+          "leg_o2_cost": 63.0054,
           "dolphin_o2_cost": 0.0,
-          "static_o2_rate": 239.0
-        }
+          "intensity_time_o2_cost": 32.5986,
+          "anaerobic_recovery_o2_cost": -0.0,
+          "static_o2_rate": 251.5265
+        },
+        "arm_pulls": 25.0,
+        "leg_kicks": 25.0
       },
       {
         "name": "BOURDILA Guillaume",
         "distance_m": 221.5,
         "total_time_s": 260.0,
         "sta_budget_s": 402.0,
-        "movement_intensity": 1.1783,
-        "prediction_s": 438.94,
-        "residual_s": 36.94,
+        "movement_intensity": 1.1745,
+        "prediction_s": 472.335,
+        "residual_s": 70.335,
         "features": {
-          "wall_push_o2_cost": 5.8915,
-          "arm_o2_cost": 21.2094,
-          "leg_o2_cost": 27.1009,
-          "dolphin_o2_cost": 10.6047,
+          "wall_push_o2_cost": 5.8725,
+          "arm_o2_cost": 21.141,
+          "leg_o2_cost": 27.0135,
+          "dolphin_o2_cost": 10.5705,
+          "intensity_time_o2_cost": 305.37,
+          "anaerobic_recovery_o2_cost": -260.0,
           "static_o2_rate": 260.0
         },
         "component_costs": {
-          "wall_push_o2_cost": 0.0,
-          "arm_o2_cost": 134.3536,
-          "leg_o2_cost": 44.5863,
+          "wall_push_o2_cost": 14.3843,
+          "arm_o2_cost": 77.675,
+          "leg_o2_cost": 66.1676,
           "dolphin_o2_cost": 0.0,
-          "static_o2_rate": 260.0
-        }
+          "intensity_time_o2_cost": 40.4813,
+          "anaerobic_recovery_o2_cost": -0.0,
+          "static_o2_rate": 273.6272
+        },
+        "arm_pulls": 18.0,
+        "leg_kicks": 23.0
       },
       {
         "name": "QUESADA Francisco",
         "distance_m": 207.5,
         "total_time_s": 207.0,
         "sta_budget_s": 443.0,
-        "movement_intensity": 1.7346,
-        "prediction_s": 504.599,
-        "residual_s": 61.599,
+        "movement_intensity": 1.7528,
+        "prediction_s": 518.182,
+        "residual_s": 75.182,
         "features": {
-          "wall_push_o2_cost": 8.673,
-          "arm_o2_cost": 37.2939,
-          "leg_o2_cost": 37.2939,
-          "dolphin_o2_cost": 18.647,
+          "wall_push_o2_cost": 8.764,
+          "arm_o2_cost": 37.6852,
+          "leg_o2_cost": 37.6852,
+          "dolphin_o2_cost": 18.8426,
+          "intensity_time_o2_cost": 362.8296,
+          "anaerobic_recovery_o2_cost": -207.0,
           "static_o2_rate": 207.0
         },
         "component_costs": {
-          "wall_push_o2_cost": 0.0,
-          "arm_o2_cost": 236.2429,
-          "leg_o2_cost": 61.3557,
+          "wall_push_o2_cost": 21.4668,
+          "arm_o2_cost": 138.4607,
+          "leg_o2_cost": 92.3071,
           "dolphin_o2_cost": 0.0,
-          "static_o2_rate": 207.0
-        }
+          "intensity_time_o2_cost": 48.0984,
+          "anaerobic_recovery_o2_cost": -0.0,
+          "static_o2_rate": 217.8493
+        },
+        "arm_pulls": 21.5,
+        "leg_kicks": 21.5
       },
       {
         "name": "PELES Vanja",
         "distance_m": 203.5,
         "total_time_s": 217.0,
         "sta_budget_s": 367.0,
-        "movement_intensity": 1.1515,
-        "prediction_s": 460.502,
-        "residual_s": 93.502,
+        "movement_intensity": 1.1636,
+        "prediction_s": 462.069,
+        "residual_s": 95.069,
         "features": {
-          "wall_push_o2_cost": 4.606,
-          "arm_o2_cost": 30.5147,
-          "leg_o2_cost": 30.5147,
-          "dolphin_o2_cost": 15.2574,
+          "wall_push_o2_cost": 4.6544,
+          "arm_o2_cost": 30.8354,
+          "leg_o2_cost": 30.8354,
+          "dolphin_o2_cost": 15.4177,
+          "intensity_time_o2_cost": 252.5012,
+          "anaerobic_recovery_o2_cost": -217.0,
           "static_o2_rate": 217.0
         },
         "component_costs": {
-          "wall_push_o2_cost": 0.0,
-          "arm_o2_cost": 193.2995,
-          "leg_o2_cost": 50.2027,
+          "wall_push_o2_cost": 11.4006,
+          "arm_o2_cost": 113.2935,
+          "leg_o2_cost": 75.529,
           "dolphin_o2_cost": 0.0,
-          "static_o2_rate": 217.0
-        }
+          "intensity_time_o2_cost": 33.4727,
+          "anaerobic_recovery_o2_cost": -0.0,
+          "static_o2_rate": 228.3735
+        },
+        "arm_pulls": 26.5,
+        "leg_kicks": 26.5
       },
       {
         "name": "CERIMAGIC Enes",
@@ -167,298 +207,376 @@
         "total_time_s": 221.0,
         "sta_budget_s": 266.0,
         "movement_intensity": 1.0,
-        "prediction_s": 508.52,
-        "residual_s": 242.52,
+        "prediction_s": 500.699,
+        "residual_s": 234.699,
         "features": {
           "wall_push_o2_cost": 5.0,
           "arm_o2_cost": 35.0,
           "leg_o2_cost": 40.0,
           "dolphin_o2_cost": 0.0,
+          "intensity_time_o2_cost": 221.0,
+          "anaerobic_recovery_o2_cost": -221.0,
           "static_o2_rate": 221.0
         },
         "component_costs": {
-          "wall_push_o2_cost": 0.0,
-          "arm_o2_cost": 221.7119,
-          "leg_o2_cost": 65.8078,
+          "wall_push_o2_cost": 12.2471,
+          "arm_o2_cost": 128.5949,
+          "leg_o2_cost": 97.977,
           "dolphin_o2_cost": 0.0,
-          "static_o2_rate": 221.0
-        }
+          "intensity_time_o2_cost": 29.2968,
+          "anaerobic_recovery_o2_cost": -0.0,
+          "static_o2_rate": 232.5831
+        },
+        "arm_pulls": 35.0,
+        "leg_kicks": 40.0
       },
       {
         "name": "PAVKOVIC Nenad",
         "distance_m": 200.0,
         "total_time_s": 217.0,
         "sta_budget_s": 373.0,
-        "movement_intensity": 1.1413,
-        "prediction_s": 419.61,
-        "residual_s": 46.61,
+        "movement_intensity": 1.0454,
+        "prediction_s": 460.736,
+        "residual_s": 87.736,
         "features": {
-          "wall_push_o2_cost": 4.5652,
-          "arm_o2_cost": 15.9782,
-          "leg_o2_cost": 61.6302,
+          "wall_push_o2_cost": 4.1816,
+          "arm_o2_cost": 14.6356,
+          "leg_o2_cost": 56.4516,
           "dolphin_o2_cost": 0.0,
+          "intensity_time_o2_cost": 226.8518,
+          "anaerobic_recovery_o2_cost": -217.0,
           "static_o2_rate": 217.0
         },
         "component_costs": {
-          "wall_push_o2_cost": 0.0,
-          "arm_o2_cost": 101.2159,
-          "leg_o2_cost": 101.3937,
+          "wall_push_o2_cost": 10.2425,
+          "arm_o2_cost": 53.7732,
+          "leg_o2_cost": 138.274,
           "dolphin_o2_cost": 0.0,
-          "static_o2_rate": 217.0
-        }
+          "intensity_time_o2_cost": 30.0725,
+          "anaerobic_recovery_o2_cost": -0.0,
+          "static_o2_rate": 228.3735
+        },
+        "arm_pulls": 14.0,
+        "leg_kicks": 54.0
       },
       {
         "name": "BRIANTSEV Mikhail",
         "distance_m": 195.0,
         "total_time_s": 229.0,
         "sta_budget_s": 455.0,
-        "movement_intensity": 0.8707,
-        "prediction_s": 436.223,
-        "residual_s": -18.777,
+        "movement_intensity": 0.8724,
+        "prediction_s": 439.505,
+        "residual_s": -15.495,
         "features": {
-          "wall_push_o2_cost": 3.4828,
-          "arm_o2_cost": 25.2503,
-          "leg_o2_cost": 28.7331,
+          "wall_push_o2_cost": 3.4896,
+          "arm_o2_cost": 25.2996,
+          "leg_o2_cost": 28.7892,
           "dolphin_o2_cost": 0.0,
+          "intensity_time_o2_cost": 199.7796,
+          "anaerobic_recovery_o2_cost": -229.0,
           "static_o2_rate": 229.0
         },
         "component_costs": {
-          "wall_push_o2_cost": 0.0,
-          "arm_o2_cost": 159.9512,
-          "leg_o2_cost": 47.2716,
+          "wall_push_o2_cost": 8.5475,
+          "arm_o2_cost": 92.9542,
+          "leg_o2_cost": 70.517,
           "dolphin_o2_cost": 0.0,
-          "static_o2_rate": 229.0
-        }
+          "intensity_time_o2_cost": 26.4837,
+          "anaerobic_recovery_o2_cost": -0.0,
+          "static_o2_rate": 241.0024
+        },
+        "arm_pulls": 29.0,
+        "leg_kicks": 33.0
       },
       {
         "name": "LEE Po-Yen",
         "distance_m": 185.0,
         "total_time_s": 204.0,
         "sta_budget_s": 453.0,
-        "movement_intensity": 0.9579,
-        "prediction_s": 411.446,
-        "residual_s": -41.554,
+        "movement_intensity": 0.9219,
+        "prediction_s": 426.483,
+        "residual_s": -26.517,
         "features": {
-          "wall_push_o2_cost": 3.8316,
-          "arm_o2_cost": 21.5527,
-          "leg_o2_cost": 43.1055,
+          "wall_push_o2_cost": 3.6876,
+          "arm_o2_cost": 20.7428,
+          "leg_o2_cost": 41.4855,
           "dolphin_o2_cost": 0.0,
+          "intensity_time_o2_cost": 188.0676,
+          "anaerobic_recovery_o2_cost": -204.0,
           "static_o2_rate": 204.0
         },
         "component_costs": {
-          "wall_push_o2_cost": 0.0,
-          "arm_o2_cost": 136.5286,
-          "leg_o2_cost": 70.917,
+          "wall_push_o2_cost": 9.0325,
+          "arm_o2_cost": 76.2117,
+          "leg_o2_cost": 101.6157,
           "dolphin_o2_cost": 0.0,
-          "static_o2_rate": 204.0
-        }
+          "intensity_time_o2_cost": 24.9311,
+          "anaerobic_recovery_o2_cost": -0.0,
+          "static_o2_rate": 214.6921
+        },
+        "arm_pulls": 22.5,
+        "leg_kicks": 45.0
       },
       {
         "name": "MILOSIC Boris",
         "distance_m": 182.0,
         "total_time_s": 218.0,
         "sta_budget_s": 433.0,
-        "movement_intensity": 0.6707,
-        "prediction_s": 346.254,
-        "residual_s": -86.746,
+        "movement_intensity": 0.6354,
+        "prediction_s": 367.239,
+        "residual_s": -65.761,
         "features": {
-          "wall_push_o2_cost": 2.6828,
-          "arm_o2_cost": 12.4079,
-          "leg_o2_cost": 30.1815,
+          "wall_push_o2_cost": 2.5416,
+          "arm_o2_cost": 11.7549,
+          "leg_o2_cost": 28.593,
           "dolphin_o2_cost": 0.0,
+          "intensity_time_o2_cost": 138.5172,
+          "anaerobic_recovery_o2_cost": -218.0,
           "static_o2_rate": 218.0
         },
         "component_costs": {
-          "wall_push_o2_cost": 0.0,
-          "arm_o2_cost": 78.5997,
-          "leg_o2_cost": 49.6545,
+          "wall_push_o2_cost": 6.2255,
+          "arm_o2_cost": 43.1891,
+          "leg_o2_cost": 70.0364,
           "dolphin_o2_cost": 0.0,
-          "static_o2_rate": 218.0
-        }
+          "intensity_time_o2_cost": 18.3625,
+          "anaerobic_recovery_o2_cost": -0.0,
+          "static_o2_rate": 229.4259
+        },
+        "arm_pulls": 18.5,
+        "leg_kicks": 45.0
       },
       {
         "name": "BOCHENEK Michal",
         "distance_m": 180.5,
         "total_time_s": 220.0,
         "sta_budget_s": 428.0,
-        "movement_intensity": 1.0355,
-        "prediction_s": 418.315,
-        "residual_s": -9.685,
+        "movement_intensity": 1.0464,
+        "prediction_s": 426.085,
+        "residual_s": -1.915,
         "features": {
-          "wall_push_o2_cost": 4.142,
-          "arm_o2_cost": 24.852,
-          "leg_o2_cost": 24.852,
+          "wall_push_o2_cost": 4.1856,
+          "arm_o2_cost": 25.1136,
+          "leg_o2_cost": 25.1136,
           "dolphin_o2_cost": 0.0,
+          "intensity_time_o2_cost": 230.208,
+          "anaerobic_recovery_o2_cost": -220.0,
           "static_o2_rate": 220.0
         },
         "component_costs": {
-          "wall_push_o2_cost": 0.0,
-          "arm_o2_cost": 157.4281,
-          "leg_o2_cost": 40.8864,
+          "wall_push_o2_cost": 10.2523,
+          "arm_o2_cost": 92.2709,
+          "leg_o2_cost": 61.5139,
           "dolphin_o2_cost": 0.0,
-          "static_o2_rate": 220.0
-        }
+          "intensity_time_o2_cost": 30.5174,
+          "anaerobic_recovery_o2_cost": -0.0,
+          "static_o2_rate": 231.5307
+        },
+        "arm_pulls": 24.0,
+        "leg_kicks": 24.0
       },
       {
         "name": "SOPRONYI Andras",
         "distance_m": 180.5,
         "total_time_s": 199.0,
         "sta_budget_s": 436.0,
-        "movement_intensity": 0.9744,
-        "prediction_s": 397.276,
-        "residual_s": -38.724,
+        "movement_intensity": 0.9846,
+        "prediction_s": 398.797,
+        "residual_s": -37.203,
         "features": {
-          "wall_push_o2_cost": 3.8976,
-          "arm_o2_cost": 24.8472,
-          "leg_o2_cost": 24.8472,
+          "wall_push_o2_cost": 3.9384,
+          "arm_o2_cost": 25.1073,
+          "leg_o2_cost": 25.1073,
           "dolphin_o2_cost": 0.0,
+          "intensity_time_o2_cost": 195.9354,
+          "anaerobic_recovery_o2_cost": -199.0,
           "static_o2_rate": 199.0
         },
         "component_costs": {
-          "wall_push_o2_cost": 0.0,
-          "arm_o2_cost": 157.3977,
-          "leg_o2_cost": 40.8785,
+          "wall_push_o2_cost": 9.6468,
+          "arm_o2_cost": 92.2477,
+          "leg_o2_cost": 61.4985,
           "dolphin_o2_cost": 0.0,
-          "static_o2_rate": 199.0
-        }
+          "intensity_time_o2_cost": 25.9741,
+          "anaerobic_recovery_o2_cost": -0.0,
+          "static_o2_rate": 209.43
+        },
+        "arm_pulls": 25.5,
+        "leg_kicks": 25.5
       },
       {
         "name": "RULAND Fernando",
         "distance_m": 175.5,
         "total_time_s": 203.0,
         "sta_budget_s": 413.0,
-        "movement_intensity": 1.0355,
-        "prediction_s": 413.709,
-        "residual_s": 0.709,
+        "movement_intensity": 1.0464,
+        "prediction_s": 415.448,
+        "residual_s": 2.448,
         "features": {
-          "wall_push_o2_cost": 4.142,
-          "arm_o2_cost": 26.4053,
-          "leg_o2_cost": 26.4053,
+          "wall_push_o2_cost": 4.1856,
+          "arm_o2_cost": 26.6832,
+          "leg_o2_cost": 26.6832,
           "dolphin_o2_cost": 0.0,
+          "intensity_time_o2_cost": 212.4192,
+          "anaerobic_recovery_o2_cost": -203.0,
           "static_o2_rate": 203.0
         },
         "component_costs": {
-          "wall_push_o2_cost": 0.0,
-          "arm_o2_cost": 167.2674,
-          "leg_o2_cost": 43.4418,
+          "wall_push_o2_cost": 10.2523,
+          "arm_o2_cost": 98.0378,
+          "leg_o2_cost": 65.3585,
           "dolphin_o2_cost": 0.0,
-          "static_o2_rate": 203.0
-        }
+          "intensity_time_o2_cost": 28.1593,
+          "anaerobic_recovery_o2_cost": -0.0,
+          "static_o2_rate": 213.6397
+        },
+        "arm_pulls": 25.5,
+        "leg_kicks": 25.5
       },
       {
         "name": "MAKSIMOV Aleksandr",
         "distance_m": 175.5,
         "total_time_s": 224.0,
         "sta_budget_s": 557.0,
-        "movement_intensity": 0.7338,
-        "prediction_s": 402.596,
-        "residual_s": -154.404,
+        "movement_intensity": 0.7415,
+        "prediction_s": 403.513,
+        "residual_s": -153.487,
         "features": {
-          "wall_push_o2_cost": 2.9352,
-          "arm_o2_cost": 22.3809,
-          "leg_o2_cost": 22.3809,
+          "wall_push_o2_cost": 2.966,
+          "arm_o2_cost": 22.6158,
+          "leg_o2_cost": 22.6158,
           "dolphin_o2_cost": 0.0,
+          "intensity_time_o2_cost": 166.096,
+          "anaerobic_recovery_o2_cost": -224.0,
           "static_o2_rate": 224.0
         },
         "component_costs": {
-          "wall_push_o2_cost": 0.0,
-          "arm_o2_cost": 141.7746,
-          "leg_o2_cost": 36.8209,
+          "wall_push_o2_cost": 7.265,
+          "arm_o2_cost": 83.0934,
+          "leg_o2_cost": 55.3956,
           "dolphin_o2_cost": 0.0,
-          "static_o2_rate": 224.0
-        }
+          "intensity_time_o2_cost": 22.0185,
+          "anaerobic_recovery_o2_cost": -0.0,
+          "static_o2_rate": 235.7403
+        },
+        "arm_pulls": 30.5,
+        "leg_kicks": 30.5
       },
       {
         "name": "DE WET Anton",
         "distance_m": 168.0,
         "total_time_s": 206.0,
         "sta_budget_s": 373.0,
-        "movement_intensity": 0.7119,
-        "prediction_s": 353.702,
-        "residual_s": -19.298,
+        "movement_intensity": 0.7194,
+        "prediction_s": 358.029,
+        "residual_s": -14.971,
         "features": {
-          "wall_push_o2_cost": 2.8476,
-          "arm_o2_cost": 18.5094,
-          "leg_o2_cost": 18.5094,
+          "wall_push_o2_cost": 2.8776,
+          "arm_o2_cost": 18.7044,
+          "leg_o2_cost": 18.7044,
           "dolphin_o2_cost": 0.0,
+          "intensity_time_o2_cost": 148.1964,
+          "anaerobic_recovery_o2_cost": -206.0,
           "static_o2_rate": 206.0
         },
         "component_costs": {
-          "wall_push_o2_cost": 0.0,
-          "arm_o2_cost": 117.2501,
-          "leg_o2_cost": 30.4516,
+          "wall_push_o2_cost": 7.0485,
+          "arm_o2_cost": 68.7226,
+          "leg_o2_cost": 45.815,
           "dolphin_o2_cost": 0.0,
-          "static_o2_rate": 206.0
-        }
+          "intensity_time_o2_cost": 19.6456,
+          "anaerobic_recovery_o2_cost": -0.0,
+          "static_o2_rate": 216.7969
+        },
+        "arm_pulls": 26.0,
+        "leg_kicks": 26.0
       },
       {
         "name": "NYMO Carl-Oscar",
         "distance_m": 165.0,
         "total_time_s": 203.0,
         "sta_budget_s": 389.0,
-        "movement_intensity": 1.0355,
-        "prediction_s": 372.394,
-        "residual_s": -16.606,
+        "movement_intensity": 1.0464,
+        "prediction_s": 383.409,
+        "residual_s": -5.591,
         "features": {
-          "wall_push_o2_cost": 4.142,
-          "arm_o2_cost": 21.2278,
-          "leg_o2_cost": 21.2278,
+          "wall_push_o2_cost": 4.1856,
+          "arm_o2_cost": 21.4512,
+          "leg_o2_cost": 21.4512,
           "dolphin_o2_cost": 0.0,
+          "intensity_time_o2_cost": 212.4192,
+          "anaerobic_recovery_o2_cost": -203.0,
           "static_o2_rate": 203.0
         },
         "component_costs": {
-          "wall_push_o2_cost": 0.0,
-          "arm_o2_cost": 134.4699,
-          "leg_o2_cost": 34.9238,
+          "wall_push_o2_cost": 10.2523,
+          "arm_o2_cost": 78.8147,
+          "leg_o2_cost": 52.5431,
           "dolphin_o2_cost": 0.0,
-          "static_o2_rate": 203.0
-        }
+          "intensity_time_o2_cost": 28.1593,
+          "anaerobic_recovery_o2_cost": -0.0,
+          "static_o2_rate": 213.6397
+        },
+        "arm_pulls": 20.5,
+        "leg_kicks": 20.5
       },
       {
         "name": "KIM Hakyong",
         "distance_m": 164.0,
         "total_time_s": 197.0,
         "sta_budget_s": 477.0,
-        "movement_intensity": 0.5695,
-        "prediction_s": 362.875,
-        "residual_s": -114.125,
+        "movement_intensity": 0.5755,
+        "prediction_s": 356.623,
+        "residual_s": -120.377,
         "features": {
-          "wall_push_o2_cost": 2.278,
-          "arm_o2_cost": 20.7868,
-          "leg_o2_cost": 20.7868,
+          "wall_push_o2_cost": 2.302,
+          "arm_o2_cost": 21.0057,
+          "leg_o2_cost": 21.0057,
           "dolphin_o2_cost": 0.0,
+          "intensity_time_o2_cost": 113.3735,
+          "anaerobic_recovery_o2_cost": -197.0,
           "static_o2_rate": 197.0
         },
         "component_costs": {
-          "wall_push_o2_cost": 0.0,
-          "arm_o2_cost": 131.6763,
-          "leg_o2_cost": 34.1983,
+          "wall_push_o2_cost": 5.6386,
+          "arm_o2_cost": 77.178,
+          "leg_o2_cost": 51.452,
           "dolphin_o2_cost": 0.0,
-          "static_o2_rate": 197.0
-        }
+          "intensity_time_o2_cost": 15.0293,
+          "anaerobic_recovery_o2_cost": -0.0,
+          "static_o2_rate": 207.3252
+        },
+        "arm_pulls": 36.5,
+        "leg_kicks": 36.5
       },
       {
         "name": "SADAN Valentin",
         "distance_m": 132.0,
         "total_time_s": 147.0,
         "sta_budget_s": 372.0,
-        "movement_intensity": 0.7184,
-        "prediction_s": 309.493,
-        "residual_s": -62.507,
+        "movement_intensity": 0.6914,
+        "prediction_s": 312.552,
+        "residual_s": -59.448,
         "features": {
-          "wall_push_o2_cost": 2.1552,
-          "arm_o2_cost": 16.8824,
-          "leg_o2_cost": 33.7648,
+          "wall_push_o2_cost": 2.0742,
+          "arm_o2_cost": 16.2479,
+          "leg_o2_cost": 32.4958,
           "dolphin_o2_cost": 0.0,
+          "intensity_time_o2_cost": 101.6358,
+          "anaerobic_recovery_o2_cost": -147.0,
           "static_o2_rate": 147.0
         },
         "component_costs": {
-          "wall_push_o2_cost": 0.0,
-          "arm_o2_cost": 106.9437,
-          "leg_o2_cost": 55.5497,
+          "wall_push_o2_cost": 5.0806,
+          "arm_o2_cost": 59.697,
+          "leg_o2_cost": 79.5961,
           "dolphin_o2_cost": 0.0,
-          "static_o2_rate": 147.0
-        }
+          "intensity_time_o2_cost": 13.4733,
+          "anaerobic_recovery_o2_cost": -0.0,
+          "static_o2_rate": 154.7046
+        },
+        "arm_pulls": 23.5,
+        "leg_kicks": 47.0
       }
     ],
     "parameter_order": [
@@ -466,8 +584,10 @@
       "arm_o2_cost",
       "leg_o2_cost",
       "dolphin_o2_cost",
+      "intensity_time_o2_cost",
+      "anaerobic_recovery_o2_cost",
       "static_o2_rate"
     ],
-    "design_note": "Fit solves for (STA - swim_time) using intensity-scaled movement counts; swim_time is added back afterward"
+    "design_note": "Fit solves for (STA - swim_time) using intensity-scaled movement counts plus heart-rate and anaerobic time terms; swim_time is added back afterward"
   }
 }
