@@ -1,0 +1,473 @@
+{
+  "DNF": {
+    "dataset": "DNF",
+    "parameters": {
+      "wall_push_o2_cost": 0.0,
+      "arm_o2_cost": 6.334626,
+      "leg_o2_cost": 1.645195,
+      "dolphin_o2_cost": 0.0,
+      "static_o2_rate": 1.0
+    },
+    "unconstrained_parameters": {
+      "wall_push_o2_cost": -1.385494,
+      "arm_o2_cost": 7.17994,
+      "leg_o2_cost": 1.45388,
+      "dolphin_o2_cost": -2.075693,
+      "static_o2_rate": 1.0
+    },
+    "metrics": {
+      "attempts": 19,
+      "mean_abs_error_s": 62.2728,
+      "median_abs_error_s": 46.1512,
+      "max_abs_error_s": 242.5197,
+      "mean_abs_pct_error": 0.1583
+    },
+    "attempts": [
+      {
+        "name": "MALINA Mateusz",
+        "distance_m": 239.0,
+        "total_time_s": 265.0,
+        "sta_budget_s": 575.0,
+        "movement_intensity": 0.9447,
+        "prediction_s": 528.849,
+        "residual_s": -46.151,
+        "features": {
+          "wall_push_o2_cost": 4.7235,
+          "arm_o2_cost": 33.0645,
+          "leg_o2_cost": 33.0645,
+          "dolphin_o2_cost": 0.0,
+          "static_o2_rate": 265.0
+        },
+        "component_costs": {
+          "wall_push_o2_cost": 0.0,
+          "arm_o2_cost": 209.4512,
+          "leg_o2_cost": 54.3976,
+          "dolphin_o2_cost": 0.0,
+          "static_o2_rate": 265.0
+        }
+      },
+      {
+        "name": "CHAN Kai-Hsiang",
+        "distance_m": 235.5,
+        "total_time_s": 275.0,
+        "sta_budget_s": 521.0,
+        "movement_intensity": 1.3641,
+        "prediction_s": 498.148,
+        "residual_s": -22.852,
+        "features": {
+          "wall_push_o2_cost": 6.8205,
+          "arm_o2_cost": 27.9641,
+          "leg_o2_cost": 27.9641,
+          "dolphin_o2_cost": 27.9641,
+          "static_o2_rate": 275.0
+        },
+        "component_costs": {
+          "wall_push_o2_cost": 0.0,
+          "arm_o2_cost": 177.1418,
+          "leg_o2_cost": 46.0063,
+          "dolphin_o2_cost": 0.0,
+          "static_o2_rate": 275.0
+        }
+      },
+      {
+        "name": "KUBIAK Piotr",
+        "distance_m": 225.5,
+        "total_time_s": 239.0,
+        "sta_budget_s": 512.0,
+        "movement_intensity": 1.0182,
+        "prediction_s": 442.126,
+        "residual_s": -69.874,
+        "features": {
+          "wall_push_o2_cost": 5.091,
+          "arm_o2_cost": 25.455,
+          "leg_o2_cost": 25.455,
+          "dolphin_o2_cost": 0.0,
+          "static_o2_rate": 239.0
+        },
+        "component_costs": {
+          "wall_push_o2_cost": 0.0,
+          "arm_o2_cost": 161.2479,
+          "leg_o2_cost": 41.8784,
+          "dolphin_o2_cost": 0.0,
+          "static_o2_rate": 239.0
+        }
+      },
+      {
+        "name": "BOURDILA Guillaume",
+        "distance_m": 221.5,
+        "total_time_s": 260.0,
+        "sta_budget_s": 402.0,
+        "movement_intensity": 1.1783,
+        "prediction_s": 438.94,
+        "residual_s": 36.94,
+        "features": {
+          "wall_push_o2_cost": 5.8915,
+          "arm_o2_cost": 21.2094,
+          "leg_o2_cost": 27.1009,
+          "dolphin_o2_cost": 10.6047,
+          "static_o2_rate": 260.0
+        },
+        "component_costs": {
+          "wall_push_o2_cost": 0.0,
+          "arm_o2_cost": 134.3536,
+          "leg_o2_cost": 44.5863,
+          "dolphin_o2_cost": 0.0,
+          "static_o2_rate": 260.0
+        }
+      },
+      {
+        "name": "QUESADA Francisco",
+        "distance_m": 207.5,
+        "total_time_s": 207.0,
+        "sta_budget_s": 443.0,
+        "movement_intensity": 1.7346,
+        "prediction_s": 504.599,
+        "residual_s": 61.599,
+        "features": {
+          "wall_push_o2_cost": 8.673,
+          "arm_o2_cost": 37.2939,
+          "leg_o2_cost": 37.2939,
+          "dolphin_o2_cost": 18.647,
+          "static_o2_rate": 207.0
+        },
+        "component_costs": {
+          "wall_push_o2_cost": 0.0,
+          "arm_o2_cost": 236.2429,
+          "leg_o2_cost": 61.3557,
+          "dolphin_o2_cost": 0.0,
+          "static_o2_rate": 207.0
+        }
+      },
+      {
+        "name": "PELES Vanja",
+        "distance_m": 203.5,
+        "total_time_s": 217.0,
+        "sta_budget_s": 367.0,
+        "movement_intensity": 1.1515,
+        "prediction_s": 460.502,
+        "residual_s": 93.502,
+        "features": {
+          "wall_push_o2_cost": 4.606,
+          "arm_o2_cost": 30.5147,
+          "leg_o2_cost": 30.5147,
+          "dolphin_o2_cost": 15.2574,
+          "static_o2_rate": 217.0
+        },
+        "component_costs": {
+          "wall_push_o2_cost": 0.0,
+          "arm_o2_cost": 193.2995,
+          "leg_o2_cost": 50.2027,
+          "dolphin_o2_cost": 0.0,
+          "static_o2_rate": 217.0
+        }
+      },
+      {
+        "name": "CERIMAGIC Enes",
+        "distance_m": 202.0,
+        "total_time_s": 221.0,
+        "sta_budget_s": 266.0,
+        "movement_intensity": 1.0,
+        "prediction_s": 508.52,
+        "residual_s": 242.52,
+        "features": {
+          "wall_push_o2_cost": 5.0,
+          "arm_o2_cost": 35.0,
+          "leg_o2_cost": 40.0,
+          "dolphin_o2_cost": 0.0,
+          "static_o2_rate": 221.0
+        },
+        "component_costs": {
+          "wall_push_o2_cost": 0.0,
+          "arm_o2_cost": 221.7119,
+          "leg_o2_cost": 65.8078,
+          "dolphin_o2_cost": 0.0,
+          "static_o2_rate": 221.0
+        }
+      },
+      {
+        "name": "PAVKOVIC Nenad",
+        "distance_m": 200.0,
+        "total_time_s": 217.0,
+        "sta_budget_s": 373.0,
+        "movement_intensity": 1.1413,
+        "prediction_s": 419.61,
+        "residual_s": 46.61,
+        "features": {
+          "wall_push_o2_cost": 4.5652,
+          "arm_o2_cost": 15.9782,
+          "leg_o2_cost": 61.6302,
+          "dolphin_o2_cost": 0.0,
+          "static_o2_rate": 217.0
+        },
+        "component_costs": {
+          "wall_push_o2_cost": 0.0,
+          "arm_o2_cost": 101.2159,
+          "leg_o2_cost": 101.3937,
+          "dolphin_o2_cost": 0.0,
+          "static_o2_rate": 217.0
+        }
+      },
+      {
+        "name": "BRIANTSEV Mikhail",
+        "distance_m": 195.0,
+        "total_time_s": 229.0,
+        "sta_budget_s": 455.0,
+        "movement_intensity": 0.8707,
+        "prediction_s": 436.223,
+        "residual_s": -18.777,
+        "features": {
+          "wall_push_o2_cost": 3.4828,
+          "arm_o2_cost": 25.2503,
+          "leg_o2_cost": 28.7331,
+          "dolphin_o2_cost": 0.0,
+          "static_o2_rate": 229.0
+        },
+        "component_costs": {
+          "wall_push_o2_cost": 0.0,
+          "arm_o2_cost": 159.9512,
+          "leg_o2_cost": 47.2716,
+          "dolphin_o2_cost": 0.0,
+          "static_o2_rate": 229.0
+        }
+      },
+      {
+        "name": "LEE Po-Yen",
+        "distance_m": 185.0,
+        "total_time_s": 204.0,
+        "sta_budget_s": 453.0,
+        "movement_intensity": 0.9579,
+        "prediction_s": 411.446,
+        "residual_s": -41.554,
+        "features": {
+          "wall_push_o2_cost": 3.8316,
+          "arm_o2_cost": 21.5527,
+          "leg_o2_cost": 43.1055,
+          "dolphin_o2_cost": 0.0,
+          "static_o2_rate": 204.0
+        },
+        "component_costs": {
+          "wall_push_o2_cost": 0.0,
+          "arm_o2_cost": 136.5286,
+          "leg_o2_cost": 70.917,
+          "dolphin_o2_cost": 0.0,
+          "static_o2_rate": 204.0
+        }
+      },
+      {
+        "name": "MILOSIC Boris",
+        "distance_m": 182.0,
+        "total_time_s": 218.0,
+        "sta_budget_s": 433.0,
+        "movement_intensity": 0.6707,
+        "prediction_s": 346.254,
+        "residual_s": -86.746,
+        "features": {
+          "wall_push_o2_cost": 2.6828,
+          "arm_o2_cost": 12.4079,
+          "leg_o2_cost": 30.1815,
+          "dolphin_o2_cost": 0.0,
+          "static_o2_rate": 218.0
+        },
+        "component_costs": {
+          "wall_push_o2_cost": 0.0,
+          "arm_o2_cost": 78.5997,
+          "leg_o2_cost": 49.6545,
+          "dolphin_o2_cost": 0.0,
+          "static_o2_rate": 218.0
+        }
+      },
+      {
+        "name": "BOCHENEK Michal",
+        "distance_m": 180.5,
+        "total_time_s": 220.0,
+        "sta_budget_s": 428.0,
+        "movement_intensity": 1.0355,
+        "prediction_s": 418.315,
+        "residual_s": -9.685,
+        "features": {
+          "wall_push_o2_cost": 4.142,
+          "arm_o2_cost": 24.852,
+          "leg_o2_cost": 24.852,
+          "dolphin_o2_cost": 0.0,
+          "static_o2_rate": 220.0
+        },
+        "component_costs": {
+          "wall_push_o2_cost": 0.0,
+          "arm_o2_cost": 157.4281,
+          "leg_o2_cost": 40.8864,
+          "dolphin_o2_cost": 0.0,
+          "static_o2_rate": 220.0
+        }
+      },
+      {
+        "name": "SOPRONYI Andras",
+        "distance_m": 180.5,
+        "total_time_s": 199.0,
+        "sta_budget_s": 436.0,
+        "movement_intensity": 0.9744,
+        "prediction_s": 397.276,
+        "residual_s": -38.724,
+        "features": {
+          "wall_push_o2_cost": 3.8976,
+          "arm_o2_cost": 24.8472,
+          "leg_o2_cost": 24.8472,
+          "dolphin_o2_cost": 0.0,
+          "static_o2_rate": 199.0
+        },
+        "component_costs": {
+          "wall_push_o2_cost": 0.0,
+          "arm_o2_cost": 157.3977,
+          "leg_o2_cost": 40.8785,
+          "dolphin_o2_cost": 0.0,
+          "static_o2_rate": 199.0
+        }
+      },
+      {
+        "name": "RULAND Fernando",
+        "distance_m": 175.5,
+        "total_time_s": 203.0,
+        "sta_budget_s": 413.0,
+        "movement_intensity": 1.0355,
+        "prediction_s": 413.709,
+        "residual_s": 0.709,
+        "features": {
+          "wall_push_o2_cost": 4.142,
+          "arm_o2_cost": 26.4053,
+          "leg_o2_cost": 26.4053,
+          "dolphin_o2_cost": 0.0,
+          "static_o2_rate": 203.0
+        },
+        "component_costs": {
+          "wall_push_o2_cost": 0.0,
+          "arm_o2_cost": 167.2674,
+          "leg_o2_cost": 43.4418,
+          "dolphin_o2_cost": 0.0,
+          "static_o2_rate": 203.0
+        }
+      },
+      {
+        "name": "MAKSIMOV Aleksandr",
+        "distance_m": 175.5,
+        "total_time_s": 224.0,
+        "sta_budget_s": 557.0,
+        "movement_intensity": 0.7338,
+        "prediction_s": 402.596,
+        "residual_s": -154.404,
+        "features": {
+          "wall_push_o2_cost": 2.9352,
+          "arm_o2_cost": 22.3809,
+          "leg_o2_cost": 22.3809,
+          "dolphin_o2_cost": 0.0,
+          "static_o2_rate": 224.0
+        },
+        "component_costs": {
+          "wall_push_o2_cost": 0.0,
+          "arm_o2_cost": 141.7746,
+          "leg_o2_cost": 36.8209,
+          "dolphin_o2_cost": 0.0,
+          "static_o2_rate": 224.0
+        }
+      },
+      {
+        "name": "DE WET Anton",
+        "distance_m": 168.0,
+        "total_time_s": 206.0,
+        "sta_budget_s": 373.0,
+        "movement_intensity": 0.7119,
+        "prediction_s": 353.702,
+        "residual_s": -19.298,
+        "features": {
+          "wall_push_o2_cost": 2.8476,
+          "arm_o2_cost": 18.5094,
+          "leg_o2_cost": 18.5094,
+          "dolphin_o2_cost": 0.0,
+          "static_o2_rate": 206.0
+        },
+        "component_costs": {
+          "wall_push_o2_cost": 0.0,
+          "arm_o2_cost": 117.2501,
+          "leg_o2_cost": 30.4516,
+          "dolphin_o2_cost": 0.0,
+          "static_o2_rate": 206.0
+        }
+      },
+      {
+        "name": "NYMO Carl-Oscar",
+        "distance_m": 165.0,
+        "total_time_s": 203.0,
+        "sta_budget_s": 389.0,
+        "movement_intensity": 1.0355,
+        "prediction_s": 372.394,
+        "residual_s": -16.606,
+        "features": {
+          "wall_push_o2_cost": 4.142,
+          "arm_o2_cost": 21.2278,
+          "leg_o2_cost": 21.2278,
+          "dolphin_o2_cost": 0.0,
+          "static_o2_rate": 203.0
+        },
+        "component_costs": {
+          "wall_push_o2_cost": 0.0,
+          "arm_o2_cost": 134.4699,
+          "leg_o2_cost": 34.9238,
+          "dolphin_o2_cost": 0.0,
+          "static_o2_rate": 203.0
+        }
+      },
+      {
+        "name": "KIM Hakyong",
+        "distance_m": 164.0,
+        "total_time_s": 197.0,
+        "sta_budget_s": 477.0,
+        "movement_intensity": 0.5695,
+        "prediction_s": 362.875,
+        "residual_s": -114.125,
+        "features": {
+          "wall_push_o2_cost": 2.278,
+          "arm_o2_cost": 20.7868,
+          "leg_o2_cost": 20.7868,
+          "dolphin_o2_cost": 0.0,
+          "static_o2_rate": 197.0
+        },
+        "component_costs": {
+          "wall_push_o2_cost": 0.0,
+          "arm_o2_cost": 131.6763,
+          "leg_o2_cost": 34.1983,
+          "dolphin_o2_cost": 0.0,
+          "static_o2_rate": 197.0
+        }
+      },
+      {
+        "name": "SADAN Valentin",
+        "distance_m": 132.0,
+        "total_time_s": 147.0,
+        "sta_budget_s": 372.0,
+        "movement_intensity": 0.7184,
+        "prediction_s": 309.493,
+        "residual_s": -62.507,
+        "features": {
+          "wall_push_o2_cost": 2.1552,
+          "arm_o2_cost": 16.8824,
+          "leg_o2_cost": 33.7648,
+          "dolphin_o2_cost": 0.0,
+          "static_o2_rate": 147.0
+        },
+        "component_costs": {
+          "wall_push_o2_cost": 0.0,
+          "arm_o2_cost": 106.9437,
+          "leg_o2_cost": 55.5497,
+          "dolphin_o2_cost": 0.0,
+          "static_o2_rate": 147.0
+        }
+      }
+    ],
+    "parameter_order": [
+      "wall_push_o2_cost",
+      "arm_o2_cost",
+      "leg_o2_cost",
+      "dolphin_o2_cost",
+      "static_o2_rate"
+    ],
+    "design_note": "Fit solves for (STA - swim_time) using intensity-scaled movement counts; swim_time is added back afterward"
+  }
+}

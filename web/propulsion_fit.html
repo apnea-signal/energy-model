@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>DNF Oxygen Fit Dashboard · Apnea Energy</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <nav class="top-nav" aria-label="Primary">
+      <div class="nav-links">
+        <a class="nav-link" href="./exploration.html">Dataset Explorer</a>
+        <a class="nav-link" href="./movement_intensity.html">Movement Intensity</a>
+      </div>
+      <div class="dataset-menu" id="datasetMenu" role="tablist" aria-label="Dataset selector"></div>
+    </nav>
+    <main>
+      <section>
+        <h1>DNF Oxygen Fit Dashboard</h1>
+        <p>
+          Visualize the shared oxygen parameters fitted in <code>05_propulsion_fit.json</code>. Each point represents a max
+          attempt where the STA personal best sets the available oxygen budget and the DNF annotations map every movement
+          count. Run <code>python 05_fit_DNF_oxygen_model.py</code> to refresh the data after editing the DNF or STA CSVs.
+        </p>
+        <p class="muted">
+          Tip: keep this page and <code>movement_intensity.html</code> open together to check whether the Step 2 fit aligns
+          with your Step 1 intensity assumptions.
+        </p>
+      </section>
+
+      <section>
+        <div class="section-header">
+          <h2>Model Formula</h2>
+          <p class="muted">How movement counts and swim duration turn into a predicted oxygen spend.</p>
+        </div>
+        <aside id="formulaNote" class="note-shelf"></aside>
+        <div class="table-container">
+          <div id="formulaParameters" class="preview-table"></div>
+        </div>
+      </section>
+
+      <section>
+        <div class="section-header">
+          <h2>Fit Summary</h2>
+          <p id="datasetLabel" class="muted"></p>
+        </div>
+        <div id="metricsGrid" class="stats-grid"></div>
+        <aside id="metricsNote" class="note-shelf"></aside>
+      </section>
+
+      <section>
+        <div class="section-header">
+          <h2>Parameter Comparison</h2>
+          <p class="muted">Raw least-squares coefficients vs. the constrained (non-negative) fit.</p>
+        </div>
+        <div class="table-container">
+          <div id="parameterTable" class="preview-table"></div>
+        </div>
+        <aside id="parameterNote" class="note-shelf"></aside>
+      </section>
+
+      <section>
+        <div class="section-header">
+          <h2>Manual Fit Controls</h2>
+          <p class="muted">Adjust the shared parameters to see how the scatter and fitness score respond in real time.</p>
+        </div>
+        <div id="manualControls" class="manual-controls"></div>
+        <div id="manualMetrics" class="stats-grid stats-grid--compact"></div>
+      </section>
+
+      <section>
+        <div class="section-header">
+          <h2>Prediction vs STA Budget</h2>
+          <p class="muted">Dots on the diagonal represent perfect matches with the STA budget.</p>
+        </div>
+        <div id="fitScatter" class="chart"></div>
+        <aside id="scatterNote" class="note-shelf"></aside>
+      </section>
+
+      <section>
+        <h2>Attempt Breakdown</h2>
+        <div class="table-container">
+          <div id="attemptTable" class="preview-table"></div>
+        </div>
+      </section>
+    </main>
+    <script type="module" src="./js/propulsionFit.js"></script>
+  </body>
+</html>
