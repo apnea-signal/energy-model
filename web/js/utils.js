@@ -42,6 +42,10 @@ export function normalizeName(name) {
   return (name || "").trim().toLowerCase();
 }
 
+export function findVideoColumn(columns = []) {
+  return (columns || []).find((col) => typeof col === "string" && col.toLowerCase().includes("video"));
+}
+
 export function createChartTooltip(containerSelection) {
   if (!containerSelection || !containerSelection.node || !containerSelection.node()) {
     return null;

@@ -1,5 +1,5 @@
 import * as d3 from "https://cdn.jsdelivr.net/npm/d3@7/+esm";
-import { createChartTooltip, formatSeconds, parseTimeToSeconds } from "../utils.js";
+import { createChartTooltip, findVideoColumn, formatSeconds, parseTimeToSeconds } from "../utils.js";
 import { createDataTable } from "./baseTable.js";
 
 export function createDistanceTimeSection({
@@ -81,22 +81,10 @@ export function createDistanceTimeSection({
 
   function renderTimeTable() {
     const columns = Object.keys(state.data[0] || {});
-    const timeColumns = selectTimeColumns(columns);
-    const columnDefs = timeColumns.map((col) => {
-      const lower = col.toLowerCase();
-      return {
-        id: col,
-        name: col,
-        accessor: (row) => row[col],
-        renderCell: createColumnRenderer(lower),
-        cellAttributes: (value) => ({
-          className: lower.includes("style") ? "style-col" : undefined,
-          title: typeof value === "string" ? value : undefined,
-        }),
-      };
-    });
-
-    const distIndex = timeColumns.indexOf("Dist");
+    const videoColumn = findVideoColumn(columns);
+    const timeColumns = selectTimeColumns(columns, videoColumn);
+    const columnDefs = buildTimeColumnDefs(timeColumns, videoColumn);
+    const distIndex = columnDefs.findIndex((column) => column.id === "Dist");
     timeTable.render({
       columns: columnDefs,
       rows: state.data,
@@ -338,10 +326,10 @@ export function createDistanceTimeSection({
       .filter((athlete) => athlete.points.length >= 2);
   }
 
-  function selectTimeColumns(columns) {
-    const extras = ["Name", "Dist", "TT"];
-    const ordered = [];
-    const seen = new Set();
+function selectTimeColumns(columns, videoColumn) {
+  const extras = ["Name", "Dist", "TT"];
+  const ordered = [];
+  const seen = new Set();
 
     extras.forEach((col) => {
       if (columns.includes(col) && !seen.has(col)) {
@@ -350,18 +338,62 @@ export function createDistanceTimeSection({
       }
     });
 
-    columns.forEach((col) => {
-      const lower = col.toLowerCase();
-      if ((/^t\d+$/i).test(col) || lower.includes("time")) {
-        if (!seen.has(col)) {
-          ordered.push(col);
-          seen.add(col);
+  columns.forEach((col) => {
+    if (videoColumn && col === videoColumn) {
+      return;
+    }
+    const lower = col.toLowerCase();
+    if ((/^t\d+$/i).test(col) || lower.includes("time")) {
+      if (!seen.has(col)) {
+        ordered.push(col);
+        seen.add(col);
         }
       }
     });
 
-    return ordered;
+  return ordered;
+}
+
+function buildTimeColumnDefs(timeColumns, videoColumn) {
+  const defs = [];
+  if (timeColumns.includes("Name")) {
+    defs.push(createDataColumn("Name"));
+    if (videoColumn) {
+      defs.push(createVideoColumn(videoColumn));
+    }
   }
+  timeColumns.forEach((col) => {
+    if (col === "Name" || col === videoColumn) {
+      return;
+    }
+    defs.push(createDataColumn(col));
+  });
+  return defs;
+}
+
+function createDataColumn(columnId) {
+  const lower = columnId.toLowerCase();
+  return {
+    id: columnId,
+    name: columnId,
+    accessor: (row) => row[columnId],
+    renderCell: createColumnRenderer(lower),
+    cellAttributes: (value) => ({
+      className: lower.includes("style") ? "style-col" : undefined,
+      title: typeof value === "string" ? value : undefined,
+    }),
+  };
+}
+
+function createVideoColumn(columnId) {
+  return {
+    id: `${columnId}_video_link`,
+    name: "Video",
+    accessor: (row) => row[columnId],
+    renderCell: renderVideoLink,
+    cellAttributes: () => ({ className: "video-col" }),
+  };
+}
 
   function getPrimaryTimeColumn() {
     const columns = Object.keys(state.data[0] || {});
@@ -466,22 +498,22 @@ export function createDistanceTimeSection({
     return Math.max(32, padding + text.length * charWidth);
   }
 
-  function createColumnRenderer(lower) {
-    if (lower.includes("video")) {
-      return (value) => {
-        if (!value) {
-          return "";
-        }
-        const link = document.createElement("a");
-        link.href = value;
-        link.target = "_blank";
-        link.rel = "noreferrer";
-        link.textContent = "Open video";
-        return link;
-      };
-    }
-    return (value) => (value ?? "");
+function createColumnRenderer(lower) {
+  return (value) => (value ?? "");
+}
+
+function renderVideoLink(value) {
+  if (!value) {
+    return "";
   }
+  const link = document.createElement("a");
+  link.href = value;
+  link.target = "_blank";
+  link.rel = "noreferrer";
+  link.textContent = "[video]";
+  link.className = "video-link";
+  return link;
+}
 
   return {
     update,

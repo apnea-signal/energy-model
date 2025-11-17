@@ -1,3 +1,4 @@
+import { findVideoColumn } from "../utils.js";
 import { createDataTable } from "./baseTable.js";
 
 export function createTechniqueSection({ techniqueTableEl }) {
@@ -11,20 +12,9 @@ export function createTechniqueSection({ techniqueTableEl }) {
 
   function renderTechniqueTable() {
     const columns = Object.keys(dataRows[0] || {});
-    const techniqueColumns = selectTechniqueColumns(columns);
-    const columnDefs = techniqueColumns.map((col) => {
-      const lower = col.toLowerCase();
-      return {
-        id: col,
-        name: col,
-        accessor: (row) => row[col],
-        renderCell: createColumnRenderer(lower),
-        cellAttributes: (value) => ({
-          className: lower.includes("style") ? "style-col" : undefined,
-          title: typeof value === "string" ? value : undefined,
-        }),
-      };
-    });
+    const videoColumn = findVideoColumn(columns);
+    const techniqueColumns = selectTechniqueColumns(columns, videoColumn);
+    const columnDefs = buildTechniqueColumnDefs(techniqueColumns, videoColumn);
 
     techniqueTable.render({
       columns: columnDefs,
@@ -33,7 +23,7 @@ export function createTechniqueSection({ techniqueTableEl }) {
     });
   }
 
-  function selectTechniqueColumns(columns) {
+  function selectTechniqueColumns(columns, videoColumn) {
     const keywords = ["fin", "kick", "pull", "arm", "st_", "tk", "tw", "glide", "dk", "wk"];
     const ordered = [];
     const seen = new Set();
@@ -44,6 +34,9 @@ export function createTechniqueSection({ techniqueTableEl }) {
     }
 
     columns.forEach((col) => {
+      if (videoColumn && col === videoColumn) {
+        return;
+      }
       const lower = col.toLowerCase();
       if (lower === "additions" || lower.includes("style")) {
         return;
@@ -66,21 +59,58 @@ export function createTechniqueSection({ techniqueTableEl }) {
     return ordered;
   }
 
-  function createColumnRenderer(lower) {
-    if (lower.includes("video")) {
-      return (value) => {
-        if (!value) {
-          return "";
-        }
-        const link = document.createElement("a");
-        link.href = value;
-        link.target = "_blank";
-        link.rel = "noreferrer";
-        link.textContent = "Open video";
-        return link;
-      };
+  function buildTechniqueColumnDefs(techniqueColumns, videoColumn) {
+    const defs = [];
+    if (techniqueColumns.includes("Name")) {
+      defs.push(createTechniqueDataColumn("Name"));
+      if (videoColumn) {
+        defs.push(createVideoColumn(videoColumn));
+      }
     }
-    return (value) => (value ?? "");
+    techniqueColumns.forEach((col) => {
+      if (col === "Name" || col === videoColumn) {
+        return;
+      }
+      defs.push(createTechniqueDataColumn(col));
+    });
+    return defs;
+  }
+
+  function createTechniqueDataColumn(columnId) {
+    const lower = columnId.toLowerCase();
+    return {
+      id: columnId,
+      name: columnId,
+      accessor: (row) => row[columnId],
+      renderCell: (value) => value ?? "",
+      cellAttributes: (value) => ({
+        className: lower.includes("style") ? "style-col" : undefined,
+        title: typeof value === "string" ? value : undefined,
+      }),
+    };
+  }
+
+  function createVideoColumn(columnId) {
+    return {
+      id: `${columnId}_video_link`,
+      name: "Video",
+      accessor: (row) => row[columnId],
+      renderCell: renderVideoLink,
+      cellAttributes: () => ({ className: "video-col" }),
+    };
+  }
+
+  function renderVideoLink(value) {
+    if (!value) {
+      return "";
+    }
+    const link = document.createElement("a");
+    link.href = value;
+    link.target = "_blank";
+    link.rel = "noreferrer";
+    link.textContent = "[video]";
+    link.className = "video-link";
+    return link;
   }
 
   return {

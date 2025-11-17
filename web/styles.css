@@ -178,6 +178,23 @@ button:disabled {
   white-space: normal;
 }
 
+.standard-table .video-col {
+  width: 60px;
+  text-align: center;
+}
+
+.video-link {
+  font-size: 0.75rem;
+  color: #2563eb;
+  text-decoration: none;
+}
+
+.video-link:hover,
+.video-link:focus-visible {
+  text-decoration: underline;
+  outline: none;
+}
+
 .standard-table .empty-cell {
   text-align: center;
   color: #94a3b8;
