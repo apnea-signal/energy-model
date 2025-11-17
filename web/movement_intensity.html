@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>DNF Movement Intensity Dashboard · Apnea Energy</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <nav class="top-nav" aria-label="Primary">
+      <div class="nav-links">
+        <a class="nav-link" href="./exploration.html">Dataset Explorer</a>
+      </div>
+      <div class="dataset-menu" id="datasetMenu" role="tablist" aria-label="Dataset selector"></div>
+    </nav>
+    <main>
+      <section>
+        <h1>DNF Movement Intensity Dashboard</h1>
+        <p>
+          This dashboard reads <code>03_movement_intensity.json</code> and visualizes the proposed arm vs leg modifiers for
+          the first split of each attempt. Use it to sanity-check the per-athlete values before copying scalars into the
+          annotated CSVs.
+        </p>
+        <p class="muted">
+          Run <code>python 03_predict_DNF_movement_intensity.py</code> whenever the DNF annotations change to refresh the
+          data underneath this page.
+        </p>
+      </section>
+
+      <section>
+        <div class="section-header">
+          <h2>Dataset Summary</h2>
+          <p id="datasetLabel" class="muted"></p>
+        </div>
+        <div id="metadataStats" class="stats-grid"></div>
+        <aside id="metadataNote" class="note-shelf"></aside>
+      </section>
+
+      <section>
+        <div class="section-header">
+          <h2>Arm vs Leg Work Scatter</h2>
+          <div class="controls">
+            <label>
+              Highlight athlete
+              <select id="highlightSelect"></select>
+            </label>
+          </div>
+        </div>
+        <div id="intensityScatter" class="chart"></div>
+        <aside id="scatterNote" class="note-shelf"></aside>
+      </section>
+
+      <section>
+        <h2>Leaderboards</h2>
+        <div id="leaderboardGrid" class="leaderboard-grid"></div>
+      </section>
+
+      <section>
+        <h2>Per-Athlete Breakdown</h2>
+        <div class="table-container">
+          <div id="athleteTable" class="preview-table"></div>
+        </div>
+      </section>
+    </main>
+    <script type="module" src="./js/movementIntensity.js"></script>
+  </body>
+</html>

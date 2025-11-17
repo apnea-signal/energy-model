@@ -69,6 +69,16 @@ python -m http.server 8000
 The page loads the CSVs directly in the browser and provides sortable tables, a distance vs. time chart, and STA
 correlation plots for quick comparison between athletes.
 
+### Movement intensity dashboard
+After producing `data/dashboard_data/03_movement_intensity.json`, open `web/movement_intensity.html` to inspect the
+derived arm and leg modifiers:
+```shell
+python -m http.server 8000
+# visit http://localhost:8000/web/movement_intensity.html
+```
+This standalone dashboard surfaces the dataset medians, a scatter plot, leaderboards, and a sortable table so you can
+validate each athlete's predicted intensities before writing the scalars back into the annotated CSV.
+
 ### Data processing workflow
 The web UI displays "Weighted split stats" derived from the race CSVs. Generate the JSON consumed by the UI via the
 numbered processing scripts in the repository root (additional steps can be added later):
@@ -77,6 +87,7 @@ python run_all.py               # executes each numbered step in order
 # or run the individual steps with extra options
 python 01_build_split_stats.py --data-root data/aida_greece_2025 --output data/dashboard_data/01_split_stats.json
 python 02_static_bands.py --data-root data/aida_greece_2025 --output data/dashboard_data/02_static_bands.json
+python 03_predict_DNF_movement_intensity.py --data-root data/aida_greece_2025 --output data/dashboard_data/03_movement_intensity.json
 ```
 `01_build_split_stats.py` averages each split checkpoint time while weighting athletes by their total distance. The
 resulting `data/dashboard_data/01_split_stats.json` feeds the split targets in `web/exploration.html`.
@@ -84,6 +95,10 @@ resulting `data/dashboard_data/01_split_stats.json` feeds the split targets in `
 `02_static_bands.py` joins each race result with the STA PB roster and uses the slope/offset heuristics derived in
 `01_build_split_stats.py` to emit the STA projection bands at `data/dashboard_data/02_static_bands.json`. The web UI merges
 both JSON files when loading `web/exploration.html`.
+
+`03_predict_DNF_movement_intensity.py` inspects the DNF split counts and produces `data/dashboard_data/03_movement_intensity.json`
+with per-athlete movement intensity multipliers (first 50 m). By default it assumes one arm pull delivers the same thrust as
+two leg kicks (`--arm-leg-ratio 2.0`), but you can pass a different ratio to explore other templates.
 
 ## Testing
 Run the lightweight unit tests with:

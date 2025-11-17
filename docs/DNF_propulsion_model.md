@@ -130,21 +130,21 @@ The propulsion explorer surfaces the following parameters so users can inspect
 or eventually tune them. Values shown below match the defaults bundled in the
 frontend (mirroring the Python `DNFPropulsionModel`).
 
-| Group           | Parameter                         | Default   | Meaning                                                   |
-|-----------------|-----------------------------------|-----------|-----------------------------------------------------------|
-| Wall            | `wall_push_force`                 | 1.0       | Propulsion impulse assigned to each wall push             |
-| Wall            | `wall_push_o2_cost`               | 0.05      | Oxygen debit for the wall push impulse                    |
-| Arm strokes     | `arm_stroke_force`                | 0.8       | Propulsion per arm cycle                                  |
-| Arm strokes     | `arm_o2_cost`                     | 0.05      | Oxygen per arm cycle                                      |
-| Leg kicks       | `leg_kick_force`                  | 0.25      | Propulsion per single-leg kick embedded in a stroke cycle |
-| Leg kicks       | `leg_kick_o2_cost`                | 0.03      | Oxygen per single-leg kick inside the stroke cycle        |
-| Dolphin kicks   | `dolphin_kick_force`              | 0.05      | Minimal propulsion for stabilizing the stroke             |
-| Dolphin kicks   | `dolphin_o2_cost`                 | 0.02      | Small, unavoidable oxygen cost                            |
-| Static needs    | `static_rate_base`                | 1.0       | Baseline oxygen draw (scaled by STA only)                 |
-| Static needs    | `static_reference_sta`            | 480.0     | STA (s) used to normalize athletes                        |
-| Anaerobic legs  | `anaerobic_leg_threshold`         | 80.0      | Kick count before anaerobic shift                         |
-| Anaerobic legs  | `anaerobic_propulsion_multiplier` | 0.9       | Slight propulsion dip after threshold                     |
-| Anaerobic legs  | `anaerobic_oxygen_multiplier`     | 0.6       | Oxygen cost drops as legs go anaerobic                    |
+| Group           | Parameter                         | Default | Meaning                                                   |
+|-----------------|-----------------------------------|---------|-----------------------------------------------------------|
+| Wall            | `wall_push_force`                 | 1.0     | Propulsion impulse assigned to each wall push             |
+| Wall            | `wall_push_o2_cost`               | 0.05    | Oxygen debit for the wall push impulse                    |
+| Arm strokes     | `arm_stroke_force`                | 0.8     | Propulsion per arm cycle                                  |
+| Arm strokes     | `arm_o2_cost`                     | 0.05    | Oxygen per arm cycle                                      |
+| Leg kicks       | `leg_kick_force`                  | 0.4     | Propulsion per single-leg kick embedded in a stroke cycle |
+| Leg kicks       | `leg_kick_o2_cost`                | 0.03    | Oxygen per single-leg kick inside the stroke cycle        |
+| Dolphin kicks   | `dolphin_kick_force`              | 0.05    | Minimal propulsion for stabilizing the stroke             |
+| Dolphin kicks   | `dolphin_o2_cost`                 | 0.02    | Small, unavoidable oxygen cost                            |
+| Static needs    | `static_rate_base`                | 1.0     | Baseline oxygen draw (scaled by STA only)                 |
+| Static needs    | `static_reference_sta`            | 480.0   | STA (s) used to normalize athletes                        |
+| Anaerobic legs  | `anaerobic_leg_threshold`         | 80.0    | Kick count before anaerobic shift                         |
+| Anaerobic legs  | `anaerobic_propulsion_multiplier` | 0.9     | Slight propulsion dip after threshold                     |
+| Anaerobic legs  | `anaerobic_oxygen_multiplier`     | 0.6     | Oxygen cost drops as legs go anaerobic                    |
 
 Per-athlete modifiers (wall, stroke, kick, dolphin intensity scalars) default to
 1.0 and can be regressed later to capture swimmer-specific strengths. In the
@@ -192,6 +192,10 @@ To suggest the initial intensity values we:
   per-movement coefficients).
 - For each athlete, regress the wall/arm/leg/dolphin intensity multipliers so
   the modeled propulsion supply matches the required output for the first split.
+- Collapse the per-limb values into a single **movement intensity** by normalizing
+  arm work/pull and leg work/kick against the cohort medians and averaging the two
+  signals. If one limb lacks kicks in that split, the available limb sets the
+  intensity on its own.
 
 Those proposed intensity values (expressed as low/moderate/high scalars) are
 surfaced for manual approval. Once approved, they become part of the source
