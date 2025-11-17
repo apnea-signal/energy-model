@@ -113,6 +113,77 @@ button:disabled {
   margin-bottom: 1rem;
 }
 
+.preview-table {
+  overflow-x: auto;
+}
+
+.preview-table table {
+  width: 100%;
+  min-width: 100%;
+  border-collapse: collapse;
+}
+
+.standard-table thead th {
+  background: #f1f5f9;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #475569;
+  border-bottom: 1px solid #cbd5f5;
+  padding: 0;
+}
+
+.standard-table thead th button {
+  width: 100%;
+  border: none;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.35rem;
+  padding: 0.45rem 0.6rem;
+  cursor: pointer;
+}
+
+.standard-table thead th button:hover,
+.standard-table thead th button:focus-visible {
+  background: #e2e8f0;
+  outline: none;
+}
+
+.standard-table thead th button .sort-indicator {
+  font-size: 0.8rem;
+  color: #94a3b8;
+}
+
+.standard-table thead th[aria-sort="ascending"] button .sort-indicator,
+.standard-table thead th[aria-sort="descending"] button .sort-indicator {
+  color: #0f172a;
+}
+
+.standard-table tbody td {
+  font-size: 0.9rem;
+  color: #0f172a;
+  padding: 0.45rem 0.6rem;
+  border-bottom: 1px solid #e2e8f0;
+  white-space: nowrap;
+}
+
+.standard-table tbody tr:nth-child(even) {
+  background: #f8fafc;
+}
+
+.standard-table .style-col {
+  white-space: normal;
+}
+
+.standard-table .empty-cell {
+  text-align: center;
+  color: #94a3b8;
+  font-style: italic;
+}
+
 .table-container h3 {
   margin: 0.25rem 0 0.75rem;
 }
