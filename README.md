@@ -66,6 +66,22 @@ python -m http.server 8000
 The page loads the CSVs directly in the browser and provides sortable tables, a distance vs. time chart, and STA
 correlation plots for quick comparison between athletes.
 
+### Data processing workflow
+The web UI displays "Weighted split stats" derived from the race CSVs. Generate the JSON consumed by the UI via the
+numbered processing scripts in the repository root (additional steps can be added later):
+```shell
+python run_all.py               # executes each numbered step in order
+# or run the individual steps with extra options
+python 01_build_split_stats.py --data-root data/aida_greece_2025 --output web/dashboard_data/01_split_stats.json
+python 02_static_bands.py --data-root data/aida_greece_2025 --output web/dashboard_data/02_static_bands.json
+```
+`01_build_split_stats.py` averages each split checkpoint time while weighting athletes by their total distance. The
+resulting `web/dashboard_data/01_split_stats.json` feeds the split targets in `web/exploration.html`.
+
+`02_static_bands.py` joins each race result with the STA PB roster, applies the tuning values from
+`web/sta_band_settings.json`, and emits the STA projection bands at `web/dashboard_data/02_static_bands.json`. The web UI
+merges both JSON files when loading `web/exploration.html`.
+
 ## Testing
 Run the lightweight unit tests with:
 ```shell

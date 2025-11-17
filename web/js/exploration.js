@@ -9,6 +9,10 @@ const DATASETS = {
   DYNB: "../data/aida_greece_2025/DYNB.csv",
 };
 const STA_DATA_URL = "../data/aida_greece_2025/STA_PB.csv";
+const MODEL_PARAM_FILES = [
+  "./dashboard_data/01_split_stats.json",
+  "./dashboard_data/02_static_bands.json",
+];
 
 const datasetSelect = document.getElementById("datasetSelect");
 const timeTableEl = document.getElementById("timeTable");
@@ -104,16 +108,40 @@ async function loadDataset(dataset) {
 }
 
 async function loadModelParams() {
-  try {
-    const response = await fetch("./dashboard_data/model_params.json");
-    if (!response.ok) {
-      throw new Error("Failed to fetch model params");
+  const merged = {};
+  for (const url of MODEL_PARAM_FILES) {
+    try {
+      const chunk = await fetchJson(url);
+      mergeModelParams(merged, chunk);
+    } catch (error) {
+      console.warn(`Model params unavailable from ${url}`, error);
     }
-    MODEL_PARAMS = await response.json();
-    window.MODEL_PARAMS = MODEL_PARAMS;
-  } catch (error) {
-    console.warn("Model params unavailable", error);
-    MODEL_PARAMS = {};
-    window.MODEL_PARAMS = MODEL_PARAMS;
   }
+  MODEL_PARAMS = merged;
+  window.MODEL_PARAMS = MODEL_PARAMS;
+}
+
+async function fetchJson(url) {
+  const response = await fetch(url);
+  if (!response.ok) {
+    throw new Error(`Failed to fetch ${url}: ${response.status}`);
+  }
+  return response.json();
+}
+
+function mergeModelParams(target, source) {
+  if (!source || typeof source !== "object") {
+    return target;
+  }
+  Object.entries(source).forEach(([dataset, payload]) => {
+    if (!payload || typeof payload !== "object") {
+      return;
+    }
+    if (!target[dataset]) {
+      target[dataset] = { ...payload };
+    } else {
+      target[dataset] = { ...target[dataset], ...payload };
+    }
+  });
+  return target;
 }
