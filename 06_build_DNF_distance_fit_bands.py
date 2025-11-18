@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Compute distance fit bands comparing predicted vs realised distances."""
+"""Compute oxygen economy fit bands for distance and per-split costs."""
 
 from __future__ import annotations
 
@@ -64,16 +64,26 @@ def main(argv: Sequence[str] | None = None) -> int:
         if not isinstance(attempts, list):
             LOGGER.warning("Dataset %s lacks attempts array", dataset)
             continue
-        points = build_distance_points(attempts, split_distance=args.split_distance)
-        if len(points) < MIN_POINTS:
-            LOGGER.warning("%s: insufficient points for distance band (need %d, have %d)", dataset, MIN_POINTS, len(points))
-            continue
-        band = fit_distance_band(dataset, points)
-        if band:
-            output[dataset] = {"distance_fit_band": band}
+        distance_points = build_distance_points(attempts, split_distance=args.split_distance)
+        cost_points = build_cost_points(attempts)
+        dataset_payload: Dict[str, dict] = {}
+        if len(distance_points) < MIN_POINTS:
+            LOGGER.warning("%s: insufficient points for distance band (need %d, have %d)", dataset, MIN_POINTS, len(distance_points))
+        else:
+            distance_band = fit_distance_band(dataset, distance_points)
+            if distance_band:
+                dataset_payload["distance_fit_band"] = distance_band
+        if len(cost_points) < MIN_POINTS:
+            LOGGER.warning("%s: insufficient points for cost band (need %d, have %d)", dataset, MIN_POINTS, len(cost_points))
+        else:
+            cost_band = fit_cost_band(dataset, cost_points)
+            if cost_band:
+                dataset_payload["distance_cost_band"] = cost_band
+        if dataset_payload:
+            output[dataset] = dataset_payload
 
     if not output:
-        LOGGER.error("No distance bands generated; aborting")
+        LOGGER.error("No oxygen economy bands generated; aborting")
         return 1
 
     args.output.parent.mkdir(parents=True, exist_ok=True)
@@ -99,6 +109,20 @@ def build_distance_points(attempts: List[dict], *, split_distance: float) -> Lis
         if not math.isfinite(predicted):
             continue
         points.append((actual, predicted))
+    return points
+
+
+def build_cost_points(attempts: List[dict]) -> List[tuple[float, float]]:
+    points: List[tuple[float, float]] = []
+    for attempt in attempts:
+        try:
+            actual = float(attempt.get("distance_m"))
+            split_cost = float(attempt.get("split_o2_cost"))
+        except (TypeError, ValueError):
+            continue
+        if not all(math.isfinite(value) and value > 0 for value in (actual, split_cost)):
+            continue
+        points.append((actual, split_cost))
     return points
 
 
@@ -141,6 +165,49 @@ def fit_distance_band(dataset: str, points: List[tuple[float, float]]) -> dict |
             "x_min": round(start, 3),
             "x_max": round(end, 3),
             "label": "distance_fit",
+        },
+    }
+
+
+def fit_cost_band(dataset: str, points: List[tuple[float, float]]) -> dict | None:
+    xs = [x for x, _ in points]
+    ys = [y for _, y in points]
+    if len(xs) < MIN_POINTS:
+        return None
+    center_value = statistics.median(ys)
+    residuals = [y - center_value for y in ys]
+    abs_dev = [abs(res) for res in residuals]
+    mad = statistics.median(abs_dev) if abs_dev else 0.0
+    half_width = max(0.1, mad * 1.4826)
+    coverage = compute_coverage(residuals, 0.0, half_width)
+    target = 0.6
+    iterations = 0
+    while coverage < target and iterations < 12:
+        half_width *= 1.2
+        coverage = compute_coverage(residuals, 0.0, half_width)
+        iterations += 1
+
+    domain, start, end = build_domain(xs)
+    samples = [format_sample(x, center_value, half_width) for x in domain]
+    LOGGER.info(
+        "%s cost band: slope=0 intercept=%.3f width=%.3f coverage=%.2f points=%d",
+        dataset,
+        center_value,
+        half_width * 2,
+        coverage,
+        len(points),
+    )
+    return {
+        "band_width": round(half_width * 2, 4),
+        "samples": samples,
+        "metadata": {
+            "slope": 0.0,
+            "intercept": round(center_value, 4),
+            "coverage_ratio": round(coverage, 3),
+            "source_points": len(points),
+            "x_min": round(start, 3),
+            "x_max": round(end, 3),
+            "label": "distance_cost",
         },
     }
 

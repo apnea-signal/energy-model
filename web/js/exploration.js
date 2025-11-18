@@ -25,6 +25,7 @@ const timeTableEl = document.getElementById("timeTable");
 const techniqueTableEl = document.getElementById("techniqueTable");
 const movementQuadrantChartEl = document.getElementById("movementQuadrantChart");
 const movementQuadrantNoteEl = document.getElementById("movementQuadrantNote");
+const oxygenCostChartEl = document.getElementById("oxygenCostChart");
 const oxygenEconomyChartEl = document.getElementById("oxygenEconomyChart");
 const oxygenEconomyNoteEl = document.getElementById("oxygenEconomyNote");
 const distanceTimeChartEl = document.getElementById("distanceTimeChart");
@@ -49,7 +50,11 @@ const staReferenceSection = createStaReferenceSection({
 });
 const techniqueSection = createTechniqueSection({ techniqueTableEl });
 const movementQuadrantSection = createMovementQuadrantSection({ chartEl: movementQuadrantChartEl, noteEl: movementQuadrantNoteEl });
-const oxygenEconomySection = createOxygenEconomySection({ chartEl: oxygenEconomyChartEl, noteEl: oxygenEconomyNoteEl });
+const oxygenEconomySection = createOxygenEconomySection({
+  chartEl: oxygenEconomyChartEl,
+  noteEl: oxygenEconomyNoteEl,
+  costChartEl: oxygenCostChartEl,
+});
 
 const state = {
   dataset: "DNF",
@@ -124,7 +129,8 @@ async function loadDataset(dataset) {
     data,
     propulsion: getPropulsionFit(dataset),
     splitDistance: getSplitDistance(dataset),
-    band: getDistanceFitBand(dataset),
+    distanceBand: getDistanceFitBand(dataset),
+    costBand: getDistanceCostBand(dataset),
   });
   staReferenceSection.updateDataset({ data, dataset, modelParams: MODEL_PARAMS });
 }
@@ -231,4 +237,8 @@ function getSplitDistance(dataset) {
 
 function getDistanceFitBand(dataset) {
   return MODEL_PARAMS?.[dataset]?.distance_fit_band;
+}
+
+function getDistanceCostBand(dataset) {
+  return MODEL_PARAMS?.[dataset]?.distance_cost_band;
 }

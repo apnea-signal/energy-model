@@ -1,16 +1,17 @@
 import * as d3 from "https://cdn.jsdelivr.net/npm/d3@7/+esm";
 import { appendChartTitle, extendBandSamplesToDomain, renderBandScatterChart } from "./chartWithBands.js";
 
-export function createOxygenEconomySection({ chartEl, noteEl }) {
-  function update({ dataset, propulsion = {}, splitDistance = 50, band } = {}) {
-    renderOxygenChart(chartEl, {
-      propulsion,
-      splitDistance,
-      band,
-    });
+const NO_DATA_MESSAGE = "Oxygen economy data unavailable for this dataset.";
+
+export function createOxygenEconomySection({ chartEl, noteEl, costChartEl }) {
+  function update({ dataset, propulsion = {}, splitDistance = 50, distanceBand, costBand } = {}) {
+    const rows = buildEconomyRows({ propulsion, splitDistance });
+    renderOxygenCostChart(costChartEl, { rows, band: costBand });
+    renderOxygenChart(chartEl, { rows, band: distanceBand });
     if (noteEl) {
-      noteEl.textContent =
-        "Points above the diagonal suggest the swimmer under-used their STA oxygen bank; points below show swims that exceeded the simplified model's budget.";
+      noteEl.textContent = rows.length
+        ? "Points above the diagonal suggest the swimmer under-used their STA oxygen bank; points below show swims that exceeded the simplified model's budget."
+        : NO_DATA_MESSAGE;
     }
   }
 
@@ -19,14 +20,13 @@ export function createOxygenEconomySection({ chartEl, noteEl }) {
   };
 }
 
-function renderOxygenChart(containerEl, { propulsion, splitDistance, band }) {
+function renderOxygenChart(containerEl, { rows = [], band }) {
   if (!containerEl) {
     return;
   }
   containerEl.textContent = "";
-  const rows = buildEconomyRows({ propulsion, splitDistance });
   if (!rows.length) {
-    containerEl.textContent = "Oxygen economy data unavailable for this dataset.";
+    containerEl.textContent = NO_DATA_MESSAGE;
     return;
   }
 
@@ -82,6 +82,64 @@ function renderOxygenChart(containerEl, { propulsion, splitDistance, band }) {
   });
 
   appendChartTitle(chart, "Oxygen economy: realised vs predicted distance");
+}
+
+function renderOxygenCostChart(containerEl, { rows = [], band } = {}) {
+  if (!containerEl) {
+    return;
+  }
+  containerEl.textContent = "";
+  if (!rows.length) {
+    containerEl.textContent = NO_DATA_MESSAGE;
+    return;
+  }
+  const baseBandSamples = Array.isArray(band?.samples) ? band.samples : [];
+  const dataExtent = d3.extent(rows, (row) => row.actualDistance);
+  const bandTargetDomain = buildBandTargetDomain(band, dataExtent);
+  const initialBandSamples = extendBandSamplesToDomain(baseBandSamples, band?.metadata, bandTargetDomain);
+  const xValues = rows
+    .map((row) => row.actualDistance)
+    .concat(initialBandSamples.map((sample) => sample.x))
+    .concat(bandTargetDomain || []);
+  const yValues = rows
+    .map((row) => row.splitCost)
+    .concat(initialBandSamples.flatMap((sample) => [sample.lower, sample.upper]));
+  const xDomain = applyDomainPadding(buildTightDomain(xValues), computeAxisPadding(xValues));
+  const yDomain = buildTightDomain(yValues);
+  const bandSamples = extendBandSamplesToDomain(baseBandSamples, band?.metadata, xDomain);
+  const chart = renderBandScatterChart({
+    containerEl,
+    data: rows,
+    xAccessor: (row) => row.actualDistance,
+    yAccessor: (row) => row.splitCost,
+    xDomain,
+    yDomain,
+    height: 360,
+    xTickFormat: (value) => `${value.toFixed(0)} m`,
+    yTickFormat: (value) => `${value.toFixed(1)} s`,
+    xLabel: "Realised distance",
+    yLabel: "Predicted O₂ per 50 m split",
+    ariaLabel: "Realised distance vs predicted oxygen cost per 50 m split",
+    getPointColor: () => "#10b981",
+    getPointRadius: () => 5,
+    band: bandSamples.length
+      ? {
+          samples: bandSamples,
+          fill: "#a7f3d0",
+          stroke: "#10b981",
+          fillOpacity: 0.35,
+          strokeWidth: 2,
+        }
+      : undefined,
+    tooltipFormatter: (row) => `
+          <strong>${row.name}</strong>
+          <div>Realised: ${row.actualDistance?.toFixed(0)} m</div>
+          <div>Predicted: ${row.predictedDistance?.toFixed(0)} m</div>
+          <div>O₂ per 50 m split: ${row.splitCost?.toFixed(1)} s</div>
+          <div>STA budget: ${row.budget?.toFixed(0)} s</div>
+        `,
+  });
+  appendChartTitle(chart, "Realised distance vs predicted O₂ cost per split");
 }
 
 function buildEconomyRows({ propulsion = {}, splitDistance = 50 }) {
