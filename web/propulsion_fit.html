@@ -8,11 +8,17 @@
   </head>
   <body>
     <nav class="top-nav" aria-label="Primary">
-      <div class="nav-links">
-        <a class="nav-link" href="./exploration.html">Dataset Explorer</a>
-        <a class="nav-link" href="./movement_intensity.html">Movement Intensity</a>
+      <div class="nav-tier nav-tier--primary" role="menubar">
+        <a class="nav-root-link" href="./exploration.html">Exploratory Dashboard</a>
+        <a class="nav-root-link is-active" href="./movement_intensity.html" aria-current="page">Models</a>
+        <a class="nav-root-link" href="./calculator_dnf.html">Calculators</a>
       </div>
-      <div class="dataset-menu" id="datasetMenu" role="tablist" aria-label="Dataset selector"></div>
+      <div class="nav-tier nav-tier--secondary" role="navigation" aria-label="Models">
+        <a class="subnav-link" href="./movement_intensity.html">DNF Movement Intensity</a>
+        <a class="subnav-link is-active" href="./propulsion_fit.html" aria-current="page">DNF Oxygen Economy</a>
+        <span class="subnav-link is-disabled" role="link" aria-disabled="true">DYNB Movement Intensity</span>
+        <span class="subnav-link is-disabled" role="link" aria-disabled="true">DYNB Oxygen Economy</span>
+      </div>
     </nav>
     <main>
       <section>
@@ -26,6 +32,10 @@
           Tip: keep this page and <code>movement_intensity.html</code> open together to check whether the Step 2 fit aligns
           with your Step 1 intensity assumptions.
         </p>
+        <div class="dataset-toolbar">
+          <span class="dataset-toolbar__label">Dataset</span>
+          <div class="dataset-menu" id="datasetMenu" role="tablist" aria-label="Dataset selector"></div>
+        </div>
       </section>
 
       <section>

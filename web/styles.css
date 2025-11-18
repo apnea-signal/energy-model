@@ -63,11 +63,48 @@ details .table-container {
   color: #fff;
   padding: 0.75rem 1.5rem;
   display: flex;
-  align-items: center;
-  justify-content: flex-start;
-  gap: 1rem;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.4rem;
   box-shadow: 0 4px 12px rgba(15, 23, 42, 0.4);
   backdrop-filter: blur(8px);
+}
+
+.nav-tier {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.nav-tier--secondary {
+  width: 100%;
+  border-top: 1px solid rgba(248, 250, 252, 0.15);
+  padding-top: 0.4rem;
+  margin-top: 0.25rem;
+}
+
+.nav-root-link {
+  color: #cbd5f5;
+  text-decoration: none;
+  font-weight: 600;
+  padding: 0.35rem 0.9rem;
+  border-radius: 999px;
+  border: 1px solid transparent;
+  transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+}
+
+.nav-root-link:hover,
+.nav-root-link:focus-visible {
+  color: #fff;
+  outline: none;
+  border-color: rgba(248, 250, 252, 0.35);
+}
+
+.nav-root-link.is-active {
+  background: #f8fafc;
+  color: #0f172a;
+  border-color: #f8fafc;
 }
 
 .dataset-menu {
@@ -76,27 +113,55 @@ details .table-container {
   gap: 0.5rem;
 }
 
-.dataset-link {
+.dataset-link,
+.subnav-link {
   background: transparent;
   color: #cbd5f5;
   border: 1px solid rgba(248, 250, 252, 0.2);
   padding: 0.35rem 0.9rem;
   border-radius: 999px;
   font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+  cursor: pointer;
   transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease;
 }
 
 .dataset-link:hover,
-.dataset-link:focus-visible {
+.dataset-link:focus-visible,
+.subnav-link:hover,
+.subnav-link:focus-visible {
   border-color: #f8fafc;
   color: #fff;
   outline: none;
 }
 
-.dataset-link.is-active {
+.dataset-link.is-active,
+.subnav-link.is-active {
   background: #f8fafc;
   color: #0f172a;
   border-color: #f8fafc;
+}
+
+.subnav-link.is-disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  border-color: rgba(248, 250, 252, 0.15);
+}
+
+.dataset-toolbar {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-top: 1rem;
+}
+
+.dataset-toolbar__label {
+  font-weight: 600;
+  color: #475569;
 }
 
 .controls {

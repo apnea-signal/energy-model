@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>DNF Performance Calculator · Apnea Energy</title>
+    <link rel="stylesheet" href="./styles.css?v=20240530" />
+  </head>
+  <body>
+    <nav class="top-nav" aria-label="Primary">
+      <div class="nav-tier nav-tier--primary" role="menubar">
+        <a class="nav-root-link" href="./exploration.html">Exploratory Dashboard</a>
+        <a class="nav-root-link" href="./movement_intensity.html">Models</a>
+        <a class="nav-root-link is-active" href="./calculator_dnf.html" aria-current="page">Calculators</a>
+      </div>
+      <div class="nav-tier nav-tier--secondary" role="navigation" aria-label="Calculators">
+        <a class="subnav-link is-active" href="./calculator_dnf.html" aria-current="page">DNF Performance</a>
+        <a class="subnav-link" href="./calculator_dynb.html">DYNB Performance</a>
+      </div>
+    </nav>
+    <main>
+      <section>
+        <h1>DNF Performance Calculator</h1>
+        <p>
+          This workspace will reuse the movement-intensity and oxygen economy formulas to turn a static apnea PB, wall
+          cadence, and technique notes into a projected max distance. The inputs below document the expected fields while
+          the final UI is being built.
+        </p>
+      </section>
+      <section>
+        <h2>Planned Inputs</h2>
+        <ul>
+          <li>STA PB (mm:ss)</li>
+          <li>Kick vs pull emphasis, arm/leg ratios, and glide preference</li>
+          <li>Wall style (push + number of strokes off the wall)</li>
+          <li>Count of dolphins during the first 25&nbsp;m</li>
+          <li>Target pacing per 50&nbsp;m split</li>
+        </ul>
+      </section>
+      <section>
+        <h2>Projected Outputs</h2>
+        <ul>
+          <li>Suggested split times (T50, T100, ...)</li>
+          <li>Predicted max distance and the STA ceiling that supports it</li>
+          <li>
+            Oxygen spend per split highlighting where adjustments are most effective, so the coach can tune technique in
+            the practice set
+          </li>
+        </ul>
+      </section>
+      <section>
+        <h2>Status</h2>
+        <p class="muted">
+          The data transforms are ready; wiring the UI is tracked separately. Use the Exploratory Dashboard and Models tabs
+          for the detailed numbers in the meantime.
+        </p>
+      </section>
+    </main>
+  </body>
+</html>

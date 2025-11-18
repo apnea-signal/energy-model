@@ -8,14 +8,37 @@
   </head>
   <body>
     <nav class="top-nav" aria-label="Primary">
-      <div class="dataset-menu" role="tablist" aria-label="Dataset selector">
-        <button type="button" class="dataset-link" role="tab" data-dataset="DNF">DNF</button>
-        <button type="button" class="dataset-link" role="tab" data-dataset="DYNB">DYNB</button>
+      <div class="nav-tier nav-tier--primary" role="menubar">
+        <a class="nav-root-link is-active" href="./exploration.html" aria-current="page">Exploratory Dashboard</a>
+        <a class="nav-root-link" href="./movement_intensity.html">Models</a>
+        <a class="nav-root-link" href="./calculator_dnf.html">Calculators</a>
+      </div>
+      <div class="nav-tier nav-tier--secondary" role="tablist" aria-label="Exploratory Dashboard datasets">
+        <button
+          type="button"
+          class="subnav-link dataset-link"
+          role="tab"
+          aria-selected="true"
+          tabindex="0"
+          data-dataset="DNF"
+        >
+          DNF
+        </button>
+        <button
+          type="button"
+          class="subnav-link dataset-link"
+          role="tab"
+          aria-selected="false"
+          tabindex="-1"
+          data-dataset="DYNB"
+        >
+          DYNB
+        </button>
       </div>
     </nav>
     <main>
       <section>
-        <p>Select DNF or DYNB from the floating navigation to populate the interactive preview table and distance vs time plot.</p>
+        <p>Select DNF or DYNB from the navigation to populate the interactive preview table and distance vs time plot.</p>
       </section>
 
       <details id="timePanel">

@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>DYNB Performance Calculator · Apnea Energy</title>
+    <link rel="stylesheet" href="./styles.css?v=20240530" />
+  </head>
+  <body>
+    <nav class="top-nav" aria-label="Primary">
+      <div class="nav-tier nav-tier--primary" role="menubar">
+        <a class="nav-root-link" href="./exploration.html">Exploratory Dashboard</a>
+        <a class="nav-root-link" href="./movement_intensity.html">Models</a>
+        <a class="nav-root-link is-active" href="./calculator_dynb.html" aria-current="page">Calculators</a>
+      </div>
+      <div class="nav-tier nav-tier--secondary" role="navigation" aria-label="Calculators">
+        <a class="subnav-link" href="./calculator_dnf.html">DNF Performance</a>
+        <a class="subnav-link is-active" href="./calculator_dynb.html" aria-current="page">DYNB Performance</a>
+      </div>
+    </nav>
+    <main>
+      <section>
+        <h1>DYNB Performance Calculator</h1>
+        <p>
+          A similar tool for the monofin/bi-fins swimmers is planned. This placeholder tracks the requirements so modeling
+          work can continue in parallel.
+        </p>
+      </section>
+      <section>
+        <h2>Planned Inputs</h2>
+        <ul>
+          <li>STA PB (mm:ss) and DYNB PB for calibration</li>
+          <li>Fin type and cadence information</li>
+          <li>Wall style, push intensity, and the number of dolphins</li>
+          <li>Technique hints such as stroke count, glide length, and transition timing</li>
+        </ul>
+      </section>
+      <section>
+        <h2>Projected Outputs</h2>
+        <ul>
+          <li>Split targets from 50&nbsp;m to the predicted max</li>
+          <li>Estimated peak distance given the metabolic ceiling</li>
+          <li>Heat map of the oxygen spend per split, matched to the STA reserve</li>
+        </ul>
+      </section>
+      <section>
+        <h2>Status</h2>
+        <p class="muted">
+          Inputs and formulas are being mapped from the DNF work. This page is ready for wiring once the shared predictor is
+          available.
+        </p>
+      </section>
+    </main>
+  </body>
+</html>
