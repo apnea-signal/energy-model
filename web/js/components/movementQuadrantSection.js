@@ -1,5 +1,6 @@
 import * as d3 from "https://cdn.jsdelivr.net/npm/d3@7/+esm";
-import { createChartTooltip, normalizeName } from "../utils.js";
+import { normalizeName } from "../utils.js";
+import { appendChartTitle, renderBandScatterChart } from "./chartWithBands.js";
 
 export function createMovementQuadrantSection({ chartEl, noteEl }) {
   function update({ dataset, movement = [], data = [], bands = {} } = {}) {
@@ -69,148 +70,72 @@ function renderCharts(containerEl, movementEntries, datasetRows, bands, dataset)
 }
 
 function drawIntensityVsDistance(container, rows, band) {
-  const width = container.clientWidth || 900;
-  const height = 380;
-  const margin = { top: 30, right: 30, bottom: 56, left: 60 };
-  const svg = d3
-    .select(container)
-    .append("svg")
-    .attr("viewBox", `0 0 ${width} ${height}`)
-    .attr("role", "img")
-    .attr("aria-label", "Movement intensity vs distance");
-
-  const xDomain = d3.extent(rows, (row) => row.distance);
-  const yDomain = expandDomain(d3.extent(rows, (row) => row.movementIntensity));
-
-  const xScale = d3.scaleLinear().domain(xDomain).range([margin.left, width - margin.right]);
-  const yScale = d3.scaleLinear().domain(yDomain).range([height - margin.bottom, margin.top]);
-  const tooltip = createChartTooltip(d3.select(container));
-
-  const xAxis = d3.axisBottom(xScale).ticks(6).tickFormat((value) => `${value.toFixed(0)} m`);
-  const yAxis = d3.axisLeft(yScale).ticks(6);
-
-  svg
-    .append("g")
-    .attr("transform", `translate(0, ${height - margin.bottom})`)
-    .call(xAxis);
-
-  svg
-    .append("g")
-    .attr("transform", `translate(${margin.left}, 0)`)
-    .call(yAxis);
-
-  if (band?.samples?.length) {
-    drawBand(svg, xScale, yScale, band.samples, "#bfdbfe");
-  }
-
-  const points = svg
-    .append("g")
-    .selectAll("circle")
-    .data(rows)
-    .enter()
-    .append("circle")
-    .attr("cx", (row) => xScale(row.distance))
-    .attr("cy", (row) => yScale(row.movementIntensity))
-    .attr("r", 6)
-    .attr("fill", "#2563eb")
-    .attr("opacity", 0.85);
-
-  points
-    .on("mouseenter", (event, row) => {
-      tooltip?.show(
-        event,
-        `
+  const chart = renderBandScatterChart({
+    containerEl: container,
+    data: rows,
+    xAccessor: (row) => row.distance,
+    yAccessor: (row) => row.movementIntensity,
+    xDomain: d3.extent(rows, (row) => row.distance),
+    yDomain: expandDomain(d3.extent(rows, (row) => row.movementIntensity)),
+    xTickFormat: (value) => `${value.toFixed(0)} m`,
+    ariaLabel: "Movement intensity vs distance",
+    getPointColor: () => "#2563eb",
+    getPointRadius: () => 6,
+    band: band?.samples?.length
+      ? {
+          samples: band.samples,
+          fill: "#bfdbfe",
+          stroke: "#60a5fa",
+          fillOpacity: 0.3,
+        }
+      : undefined,
+    tooltipFormatter: (row) => `
           <strong>${row.name}</strong>
           <div>Distance: ${row.distance?.toFixed(0) ?? ""} m</div>
           <div>Movement intensity: ${row.movementIntensity?.toFixed(2) ?? ""}</div>
-        `
-      );
-    })
-    .on("mousemove", (event) => tooltip?.move(event))
-    .on("mouseleave", () => tooltip?.hide());
+        `,
+  });
 
-  svg
-    .append("text")
-    .attr("x", margin.left)
-    .attr("y", margin.top - 10)
-    .text("Movement intensity vs distance");
+  appendChartTitle(chart, "Movement intensity vs distance");
 }
 
 function drawWorkBiasVsDistance(container, rows, band) {
-  const width = container.clientWidth || 900;
-  const height = 380;
-  const margin = { top: 30, right: 30, bottom: 56, left: 60 };
-  const svg = d3
-    .select(container)
-    .append("svg")
-    .attr("viewBox", `0 0 ${width} ${height}`)
-    .attr("role", "img")
-    .attr("aria-label", "Leg/arm work ratio vs distance");
-
-  const xDomain = d3.extent(rows, (row) => row.distance);
   const yDomain = buildRatioDomain(rows.map((row) => row.workBias));
-
-  const xScale = d3.scaleLinear().domain(xDomain).range([margin.left, width - margin.right]);
-  const yScale = d3.scaleLinear().domain(yDomain).range([height - margin.bottom, margin.top]);
-  const tooltip = createChartTooltip(d3.select(container));
-
-  const xAxis = d3.axisBottom(xScale).ticks(6).tickFormat((value) => `${value.toFixed(0)} m`);
-  const yAxis = d3.axisLeft(yScale).ticks(6);
-
-  svg
-    .append("g")
-    .attr("transform", `translate(0, ${height - margin.bottom})`)
-    .call(xAxis);
-
-  svg
-    .append("g")
-    .attr("transform", `translate(${margin.left}, 0)`)
-    .call(yAxis);
-
-  svg
-    .append("line")
-    .attr("x1", margin.left)
-    .attr("x2", width - margin.right)
-    .attr("y1", yScale(1))
-    .attr("y2", yScale(1))
-    .attr("stroke", "#94a3b8")
-    .attr("stroke-dasharray", "4 4");
-
-  if (band?.samples?.length) {
-    drawBand(svg, xScale, yScale, band.samples, "#bbf7d0");
-  }
-
-  const points = svg
-    .append("g")
-    .selectAll("circle")
-    .data(rows)
-    .enter()
-    .append("circle")
-    .attr("cx", (row) => xScale(row.distance))
-    .attr("cy", (row) => yScale(row.workBias))
-    .attr("r", 6)
-    .attr("fill", "#16a34a")
-    .attr("opacity", 0.85);
-
-  points
-    .on("mouseenter", (event, row) => {
-      tooltip?.show(
-        event,
-        `
+  const chart = renderBandScatterChart({
+    containerEl: container,
+    data: rows,
+    xAccessor: (row) => row.distance,
+    yAccessor: (row) => row.workBias,
+    xDomain: d3.extent(rows, (row) => row.distance),
+    yDomain,
+    xTickFormat: (value) => `${value.toFixed(0)} m`,
+    ariaLabel: "Leg/arm work ratio vs distance",
+    getPointColor: () => "#16a34a",
+    getPointRadius: () => 6,
+    band: band?.samples?.length
+      ? {
+          samples: band.samples,
+          fill: "#bbf7d0",
+          stroke: "#22c55e",
+          fillOpacity: 0.35,
+        }
+      : undefined,
+    referenceLines: [
+      {
+        type: "horizontal",
+        value: 1,
+        stroke: "#94a3b8",
+        strokeDasharray: "4 4",
+      },
+    ],
+    tooltipFormatter: (row) => `
           <strong>${row.name}</strong>
           <div>Distance: ${row.distance?.toFixed(0) ?? ""} m</div>
           <div>Leg ÷ arm work: ${row.workBias?.toFixed(2) ?? ""}</div>
-        `
-      );
-    })
-    .on("mousemove", (event) => tooltip?.move(event))
-    .on("mouseleave", () => tooltip?.hide());
+        `,
+  });
 
-  svg
-    .append("text")
-    .attr("x", margin.left)
-    .attr("y", margin.top - 10)
-    .text("Leg vs arm work ratio vs distance");
+  appendChartTitle(chart, "Leg vs arm work ratio vs distance");
 }
 
 function numberOrNaN(value) {
@@ -265,34 +190,4 @@ function buildRatioDomain(values) {
   min = Math.min(min, 1 - padding);
   max = Math.max(max, 1 + padding);
   return [Math.max(0, min), Math.max(max, 0.2)];
-}
-
-function drawBand(svg, xScale, yScale, samples, color) {
-  const areaGenerator = d3
-    .area()
-    .x((d) => xScale(d.x))
-    .y0((d) => yScale(d.lower))
-    .y1((d) => yScale(d.upper))
-    .curve(d3.curveMonotoneX);
-
-  svg
-    .append("path")
-    .datum(samples)
-    .attr("fill", color)
-    .attr("opacity", 0.3)
-    .attr("d", areaGenerator);
-
-  const lineGenerator = d3
-    .line()
-    .x((d) => xScale(d.x))
-    .y((d) => yScale(d.center))
-    .curve(d3.curveMonotoneX);
-
-  svg
-    .append("path")
-    .datum(samples)
-    .attr("fill", "none")
-    .attr("stroke", color)
-    .attr("stroke-width", 1.5)
-    .attr("d", lineGenerator);
 }

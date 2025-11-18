@@ -1,6 +1,7 @@
 import * as d3 from "https://cdn.jsdelivr.net/npm/d3@7/+esm";
-import { createChartTooltip, formatSeconds, normalizeName } from "../utils.js";
+import { formatSeconds, normalizeName } from "../utils.js";
 import { createDataTable } from "./baseTable.js";
+import { appendChartTitle, renderBandScatterChart } from "./chartWithBands.js";
 
 export function createStaReferenceSection({ staTableEl, staChartEl, staTrainingNoteEl }) {
   const chartSelection = staChartEl ? d3.select(staChartEl) : null;
@@ -86,171 +87,68 @@ export function createStaReferenceSection({ staTableEl, staChartEl, staTrainingN
     renderStaTrainingNote(points);
 
     const containerNode = chartSelection.node();
-    const width = containerNode?.clientWidth || 900;
-    const height = 360;
-    const margins = { top: 20, right: 30, bottom: 60, left: 80 };
-    const [minSta, maxSta] = d3.extent(points, (d) => d.staSeconds);
-    const [minDistance, maxDistance] = d3.extent(points, (d) => d.distance);
-
-    if (!Number.isFinite(minSta) || !Number.isFinite(maxSta) || !Number.isFinite(minDistance) || !Number.isFinite(maxDistance)) {
-      chartSelection
-        .append("div")
-        .attr("class", "alert")
-        .text("STA PB values are not parsable for this dataset.");
+    if (!containerNode) {
       return;
     }
 
-    const x = d3
-      .scaleLinear()
-      .domain([Math.min(100, minDistance), maxDistance])
-      .nice()
-      .range([margins.left, width - margins.right]);
-    const y = d3
-      .scaleLinear()
-      .domain([minSta, maxSta])
-      .nice()
-      .range([height - margins.bottom, margins.top]);
+    const xDomain = buildDistanceDomain(points);
+    const yDomain = buildStaDomain(points);
+    if (!xDomain || !yDomain) {
+      chartSelection.append("div").attr("class", "alert").text("STA PB values are not parsable for this dataset.");
+      return;
+    }
 
-    const svg = chartSelection.append("svg").attr("viewBox", `0 0 ${width} ${height}`);
-    const clipId = createPlotClip(svg, { width, height, margins });
-    const plotGroup = svg.append("g").attr("clip-path", `url(#${clipId})`);
-    applyQuadrantGradient(svg, plotGroup, { width, height, margins });
-    const staTooltip = createChartTooltip(chartSelection);
+    const band = state.modelParams?.[state.dataset]?.sta_band;
+    const normalizedSamples = normalizeBandSamples(band?.samples || [], yDomain, band);
 
-    svg
-      .append("g")
-      .attr("transform", `translate(0, ${height - margins.bottom})`)
-      .call(d3.axisBottom(x))
-      .append("text")
-      .attr("x", width / 2)
-      .attr("y", 45)
-      .attr("fill", "#0f172a")
-      .text("Total performance (m)");
+    const chart = renderBandScatterChart({
+      containerEl: containerNode,
+      data: points,
+      xAccessor: (row) => row.distance,
+      yAccessor: (row) => row.staSeconds,
+      xDomain,
+      yDomain,
+      height: 360,
+      xTickFormat: (value) => `${value.toFixed(0)} m`,
+      yTickFormat: (value) => formatSeconds(value),
+      xLabel: "Total performance (m)",
+      yLabel: "Static PB (mm:ss)",
+      ariaLabel: "STA PB vs total performance",
+      getPointColor: (row) => (Number(row.staYear) >= 2024 ? "#0284c7" : "#94a3b8"),
+      getPointRadius: () => 5,
+      getPointStroke: () => "#0f172a",
+      getPointStrokeWidth: () => 0.5,
+      band: normalizedSamples.length
+        ? {
+            samples: normalizedSamples,
+            orientation: "horizontal",
+            fill: "#bfdbfe",
+            stroke: "#60a5fa",
+            fillOpacity: 0.3,
+            strokeWidth: 1.5,
+            strokeDasharray: "6 4",
+          }
+        : undefined,
+      tooltipFormatter: (row) => {
+        const staLine = `STA ${row.staDisplay || "-"}${row.staYear ? ` (${row.staYear})` : ""}`;
+        return `<strong>${row.name}</strong><div>${row.distance} m ${state.dataset}</div><div>${staLine}</div>`;
+      },
+    });
 
-    svg
-      .append("g")
-      .attr("transform", `translate(${margins.left}, 0)`)
-      .call(d3.axisLeft(y).tickFormat((d) => formatSeconds(d)))
-      .append("text")
-      .attr("text-anchor", "end")
-      .attr("transform", "rotate(-90)")
-      .attr("x", -height / 2)
-      .attr("y", -55)
-      .attr("fill", "#0f172a")
-      .text("Static PB (mm:ss)");
+    appendChartTitle(chart, "STA PB vs total performance");
 
-    renderStaTrendBand(plotGroup, x, y);
-
-    const circles = plotGroup
-      .append("g")
-      .selectAll("circle")
-      .data(points)
-      .enter()
-      .append("circle")
-      .attr("cx", (d) => x(d.distance))
-      .attr("cy", (d) => y(d.staSeconds))
-      .attr("r", 5)
-      .attr("fill", (d) => (Number(d.staYear) >= 2024 ? "#0284c7" : "#94a3b8"))
-      .attr("stroke", "#0f172a")
-      .attr("stroke-width", 0.5)
-      .attr("opacity", 0.9);
-
-    circles
-      .on("mouseenter", (event, d) => {
-        if (!staTooltip) {
-          return;
-        }
-        const staLine = `STA ${d.staDisplay || "-"}${d.staYear ? ` (${d.staYear})` : ""}`;
-        staTooltip.show(event, `<strong>${d.name}</strong><div>${d.distance} m ${state.dataset}</div><div>${staLine}</div>`);
-      })
-      .on("mousemove", (event) => {
-        staTooltip?.move(event);
-      })
-      .on("mouseleave", () => {
-        staTooltip?.hide();
-      })
-      .append("title")
+    chart.points
+      ?.append("title")
       .text((d) => `${d.name}: ${d.distance} m ${state.dataset} ← STA ${d.staDisplay || "-"}${d.staYear ? ` (${d.staYear})` : ""}`);
   }
-
-  function renderStaTrendBand(plotSelection, xScale, yScale) {
-    const band = state.modelParams?.[state.dataset]?.sta_band;
-    const samples = band?.samples || [];
-    if (!samples.length) {
-      return;
-    }
-    const normalizedSamples = normalizeBandSamples(samples, yScale, band);
-
-    const area = d3
-      .area()
-      .x0((d) => xScale(d.lower))
-      .x1((d) => xScale(d.upper))
-      .y((d) => yScale(d.x))
-      .curve(d3.curveMonotoneY);
-
-    plotSelection
-      .append("path")
-      .datum(normalizedSamples)
-      .attr("class", "sta-band")
-      .attr("fill", "rgba(14, 165, 233, 0.12)")
-      .attr("stroke", "none")
-      .attr("d", area);
-
-    const line = d3
-      .line()
-      .x((d) => xScale(d.center))
-      .y((d) => yScale(d.x))
-      .curve(d3.curveMonotoneY);
-
-    plotSelection
-      .append("path")
-      .datum(normalizedSamples)
-      .attr("class", "sta-band-line")
-      .attr("fill", "none")
-      .attr("stroke", "#0284c7")
-      .attr("stroke-width", 1.5)
-      .attr("stroke-dasharray", "6 4")
-      .attr("d", line);
-  }
-
-  function applyQuadrantGradient(svg, plotSelection, { width, height, margins }) {
-    const defs = ensureDefs(svg);
-    const gradientId = "staPerformanceBg";
-    const gradient = defs
-      .append("linearGradient")
-      .attr("id", gradientId)
-      .attr("x1", "0%")
-      .attr("y1", "0%")
-      .attr("x2", "100%")
-      .attr("y2", "100%");
-
-    gradient
-      .append("stop")
-      .attr("offset", "0%")
-      .attr("stop-color", "rgba(248, 113, 113, 0.15)");
-    gradient
-      .append("stop")
-      .attr("offset", "100%")
-      .attr("stop-color", "rgba(134, 239, 172, 0.18)");
-
-    plotSelection
-      .append("rect")
-      .attr("class", "sta-bg-gradient")
-      .attr("x", margins.left)
-      .attr("y", margins.top)
-      .attr("width", Math.max(0, width - margins.left - margins.right))
-      .attr("height", Math.max(0, height - margins.top - margins.bottom))
-      .attr("fill", `url(#${gradientId})`);
-  }
-
-  function normalizeBandSamples(samples, yScale, band) {
+  function normalizeBandSamples(samples, domain = [], band) {
     const sorted = (samples || []).slice().sort((a, b) => a.x - b.x);
     if (!sorted.length) {
       return [];
     }
-    const [domainStart, domainEnd] = yScale.domain();
-    const staMin = Math.min(domainStart, domainEnd);
-    const staMax = Math.max(domainStart, domainEnd);
+    const [domainStart, domainEnd] = domain;
+    const staMin = Number.isFinite(domainStart) ? domainStart : sorted[0].x;
+    const staMax = Number.isFinite(domainEnd) ? domainEnd : sorted[sorted.length - 1].x;
     insertBoundarySample(sorted, staMin, band);
     insertBoundarySample(sorted, staMax, band);
     return sorted.sort((a, b) => a.x - b.x);
@@ -313,28 +211,6 @@ export function createStaReferenceSection({ staTableEl, staChartEl, staTrainingN
     return { x: seconds, center, lower: center - halfWidth, upper: center + halfWidth };
   }
 
-  function ensureDefs(svg) {
-    let defs = svg.select("defs");
-    if (defs.empty()) {
-      defs = svg.append("defs");
-    }
-    return defs;
-  }
-
-  function createPlotClip(svg, { width, height, margins }) {
-    const defs = ensureDefs(svg);
-    const clipId = `staClip-${Math.random().toString(36).slice(2, 8)}`;
-    defs
-      .append("clipPath")
-      .attr("id", clipId)
-      .append("rect")
-      .attr("x", margins.left)
-      .attr("y", margins.top)
-      .attr("width", Math.max(0, width - margins.left - margins.right))
-      .attr("height", Math.max(0, height - margins.top - margins.bottom));
-    return clipId;
-  }
-
   function renderStaTrainingNote(points) {
     if (!staTrainingNoteEl) {
       return;
@@ -385,6 +261,37 @@ export function createStaReferenceSection({ staTableEl, staChartEl, staTrainingN
       list.appendChild(dd);
     });
     staTrainingNoteEl.appendChild(list);
+  }
+
+  function buildDistanceDomain(points) {
+    const values = points.map((point) => point.distance).filter((value) => Number.isFinite(value));
+    if (!values.length) {
+      return null;
+    }
+    const minValue = Math.min(...values);
+    const maxValue = Math.max(...values);
+    return padLinearDomain([Math.min(100, minValue), maxValue]);
+  }
+
+  function buildStaDomain(points) {
+    const values = points.map((point) => point.staSeconds).filter((value) => Number.isFinite(value));
+    if (!values.length) {
+      return null;
+    }
+    return padLinearDomain(d3.extent(values));
+  }
+
+  function padLinearDomain([min, max] = []) {
+    if (!Number.isFinite(min) || !Number.isFinite(max)) {
+      return null;
+    }
+    if (min === max) {
+      const pad = Math.max(5, Math.abs(min) * 0.05 || 5);
+      return [min - pad, max + pad];
+    }
+    const span = max - min;
+    const padding = span * 0.08 || 5;
+    return [Math.max(0, min - padding), max + padding];
   }
 
   function findStaHighPerformers(points) {

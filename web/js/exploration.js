@@ -17,6 +17,7 @@ const MODEL_PARAM_FILES = [
   { url: "../data/dashboard_data/03_movement_intensity.json" },
   { url: "../data/dashboard_data/04_movement_bands.json" },
   { url: "../data/dashboard_data/05_propulsion_fit.json", namespace: "propulsion_fit" },
+  { url: "../data/dashboard_data/06_distance_fit_bands.json" },
 ];
 
 const datasetNavButtons = Array.from(document.querySelectorAll(".dataset-link[data-dataset]"));
@@ -121,9 +122,9 @@ async function loadDataset(dataset) {
   oxygenEconomySection.update({
     dataset,
     data,
-    movement: getMovementEntries(dataset),
     propulsion: getPropulsionFit(dataset),
     splitDistance: getSplitDistance(dataset),
+    band: getDistanceFitBand(dataset),
   });
   staReferenceSection.updateDataset({ data, dataset, modelParams: MODEL_PARAMS });
 }
@@ -226,4 +227,8 @@ function getPropulsionFit(dataset) {
 function getSplitDistance(dataset) {
   const distance = MODEL_PARAMS?.[dataset]?.metadata?.split_distance_m;
   return Number.isFinite(distance) ? distance : 50;
+}
+
+function getDistanceFitBand(dataset) {
+  return MODEL_PARAMS?.[dataset]?.distance_fit_band;
 }
