@@ -61,20 +61,23 @@
 
       <section>
         <div class="section-header">
-          <h2>Manual Fit Controls</h2>
-          <p class="muted">Adjust the shared parameters to see how the scatter and fitness score respond in real time.</p>
+          <h2>Manual Fit Playground</h2>
+          <p class="muted">Use the sliders to fine-tune the shared parameters and watch the oxygen budget charts respond.</p>
         </div>
-        <div id="manualControls" class="manual-controls"></div>
-        <div id="manualMetrics" class="stats-grid stats-grid--compact"></div>
-      </section>
-
-      <section>
-        <div class="section-header">
-          <h2>Prediction vs STA Budget</h2>
-          <p class="muted">Dots on the diagonal represent perfect matches with the STA budget.</p>
+        <div class="manual-layout">
+          <div class="manual-layout__controls">
+            <div id="manualControls" class="manual-controls"></div>
+          </div>
+          <div class="manual-layout__charts">
+            <div id="manualMetrics" class="stats-grid stats-grid--compact"></div>
+            <div class="chart-block">
+              <div id="fitScatter" class="chart"></div>
+            </div>
+            <div class="chart-block">
+              <div id="distanceScatter" class="chart"></div>
+            </div>
+          </div>
         </div>
-        <div id="fitScatter" class="chart"></div>
-        <aside id="scatterNote" class="note-shelf"></aside>
       </section>
 
       <section>

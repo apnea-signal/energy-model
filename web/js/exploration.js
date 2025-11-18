@@ -3,6 +3,7 @@ import { createDistanceTimeSection } from "./components/distanceTimeSection.js";
 import { createStaReferenceSection } from "./components/staReferenceSection.js";
 import { createTechniqueSection } from "./components/techniqueSection.js";
 import { createMovementQuadrantSection } from "./components/movementQuadrantSection.js";
+import { createOxygenEconomySection } from "./components/oxygenEconomySection.js";
 import { normalizeName, parseTimeToSeconds } from "./utils.js";
 
 const DATASETS = {
@@ -11,10 +12,11 @@ const DATASETS = {
 };
 const STA_DATA_URL = "../data/aida_greece_2025/STA_PB.csv";
 const MODEL_PARAM_FILES = [
-  "../data/dashboard_data/01_split_stats.json",
-  "../data/dashboard_data/02_static_bands.json",
-  "../data/dashboard_data/03_movement_intensity.json",
-  "../data/dashboard_data/04_movement_bands.json",
+  { url: "../data/dashboard_data/01_split_stats.json" },
+  { url: "../data/dashboard_data/02_static_bands.json" },
+  { url: "../data/dashboard_data/03_movement_intensity.json" },
+  { url: "../data/dashboard_data/04_movement_bands.json" },
+  { url: "../data/dashboard_data/05_propulsion_fit.json", namespace: "propulsion_fit" },
 ];
 
 const datasetNavButtons = Array.from(document.querySelectorAll(".dataset-link[data-dataset]"));
@@ -22,6 +24,8 @@ const timeTableEl = document.getElementById("timeTable");
 const techniqueTableEl = document.getElementById("techniqueTable");
 const movementQuadrantChartEl = document.getElementById("movementQuadrantChart");
 const movementQuadrantNoteEl = document.getElementById("movementQuadrantNote");
+const oxygenEconomyChartEl = document.getElementById("oxygenEconomyChart");
+const oxygenEconomyNoteEl = document.getElementById("oxygenEconomyNote");
 const distanceTimeChartEl = document.getElementById("distanceTimeChart");
 const legendEl = document.getElementById("distanceTimeLegend");
 const splitStatsEl = document.getElementById("splitStats");
@@ -44,6 +48,7 @@ const staReferenceSection = createStaReferenceSection({
 });
 const techniqueSection = createTechniqueSection({ techniqueTableEl });
 const movementQuadrantSection = createMovementQuadrantSection({ chartEl: movementQuadrantChartEl, noteEl: movementQuadrantNoteEl });
+const oxygenEconomySection = createOxygenEconomySection({ chartEl: oxygenEconomyChartEl, noteEl: oxygenEconomyNoteEl });
 
 const state = {
   dataset: "DNF",
@@ -113,6 +118,13 @@ async function loadDataset(dataset) {
     movement: getMovementEntries(dataset),
     bands: getMovementBands(dataset),
   });
+  oxygenEconomySection.update({
+    dataset,
+    data,
+    movement: getMovementEntries(dataset),
+    propulsion: getPropulsionFit(dataset),
+    splitDistance: getSplitDistance(dataset),
+  });
   staReferenceSection.updateDataset({ data, dataset, modelParams: MODEL_PARAMS });
 }
 
@@ -139,10 +151,12 @@ function updateDatasetNav(activeDataset) {
 
 async function loadModelParams() {
   const merged = {};
-  for (const url of MODEL_PARAM_FILES) {
+  for (const source of MODEL_PARAM_FILES) {
+    const { url, namespace } = typeof source === "string" ? { url: source } : source;
     try {
       const chunk = await fetchJson(url);
-      mergeModelParams(merged, chunk);
+      const payload = namespace ? wrapWithNamespace(chunk, namespace) : chunk;
+      mergeModelParams(merged, payload);
     } catch (error) {
       console.warn(`Model params unavailable from ${url}`, error);
     }
@@ -176,6 +190,17 @@ function mergeModelParams(target, source) {
   return target;
 }
 
+function wrapWithNamespace(source, namespace) {
+  if (!namespace || !source || typeof source !== "object") {
+    return source;
+  }
+  const wrapped = {};
+  Object.entries(source).forEach(([dataset, payload]) => {
+    wrapped[dataset] = { [namespace]: payload };
+  });
+  return wrapped;
+}
+
 function getMovementEntries(dataset) {
   const payload = MODEL_PARAMS?.[dataset];
   if (!payload) {
@@ -192,4 +217,13 @@ function getMovementBands(dataset) {
   }
   const { movement_intensity_band, work_bias_band } = payload;
   return { movement_intensity_band, work_bias_band };
+}
+
+function getPropulsionFit(dataset) {
+  return MODEL_PARAMS?.[dataset]?.propulsion_fit;
+}
+
+function getSplitDistance(dataset) {
+  const distance = MODEL_PARAMS?.[dataset]?.metadata?.split_distance_m;
+  return Number.isFinite(distance) ? distance : 50;
 }

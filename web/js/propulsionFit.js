@@ -3,6 +3,7 @@ import { createChartTooltip, formatSeconds } from "./utils.js";
 
 const CACHE_BUST_TOKEN = Date.now().toString(36);
 const DATA_URL = withCacheBust("../data/dashboard_data/05_propulsion_fit.json");
+const DEFAULT_SPLIT_DISTANCE = 50;
 const PARAMETER_ORDER = [
   "wall_push_o2_cost",
   "arm_o2_cost",
@@ -76,7 +77,7 @@ const metricsNoteEl = document.getElementById("metricsNote");
 const parameterTableEl = document.getElementById("parameterTable");
 const parameterNoteEl = document.getElementById("parameterNote");
 const scatterEl = document.getElementById("fitScatter");
-const scatterNoteEl = document.getElementById("scatterNote");
+const distanceScatterEl = document.getElementById("distanceScatter");
 const attemptTableEl = document.getElementById("attemptTable");
 
 const state = {
@@ -85,6 +86,7 @@ const state = {
   dataset: null,
   entry: null,
   attempts: [],
+  splitDistance: DEFAULT_SPLIT_DISTANCE,
   manualParams: {},
   manualAttempts: [],
   manualMetrics: null,
@@ -138,7 +140,8 @@ function setDataset(dataset) {
   }
   state.dataset = dataset;
   state.entry = entry;
-  state.attempts = Array.isArray(entry.attempts) ? entry.attempts : [];
+  state.splitDistance = getSplitDistance(entry);
+  state.attempts = attachPredictedDistance(Array.isArray(entry.attempts) ? entry.attempts : [], state.splitDistance);
   updateDatasetNavState();
   renderFormula();
   renderSummary();
@@ -391,23 +394,31 @@ function updateManualFitViews() {
   state.manualMetrics = result.metrics;
   renderManualMetrics();
   renderScatter();
+  renderDistanceScatter();
   renderAttemptsTable();
 }
 
 function recomputeManualFit() {
+  const datasetParams = state.entry?.parameters || {};
+  const manualParams = state.manualParams || {};
+  const useManualDistance = !paramsNearlyEqual(datasetParams, manualParams);
   const manualAttempts = (state.attempts || []).map((attempt) => {
     const features = attempt.features || {};
     let prediction = 0;
     PARAMETER_ORDER.forEach((key) => {
-      const coeff = Number(state.manualParams?.[key]) || 0;
+      const coeff = Number(manualParams?.[key]) || 0;
       const featureValue = Number(features[key]) || 0;
       prediction += coeff * featureValue;
     });
     const residual = prediction - attempt.sta_budget_s;
+    const predictedDistance = useManualDistance
+      ? computeManualPredictedDistance(attempt, prediction, state.splitDistance)
+      : attempt.predicted_distance_m;
     return {
       ...attempt,
       prediction_s: prediction,
       residual_s: residual,
+      predicted_distance_m: predictedDistance,
     };
   });
   const metrics = computeManualMetrics(manualAttempts);
@@ -540,7 +551,7 @@ function renderScatter() {
     return;
   }
   const width = scatterEl.clientWidth || 900;
-  const height = 420;
+  const height = 300;
   const margin = { top: 20, right: 28, bottom: 56, left: 64 };
   const container = d3.select(scatterEl);
   const tooltip = createChartTooltip(container);
@@ -637,20 +648,122 @@ function renderScatter() {
     })
     .on("mousemove", (event) => tooltip?.move(event))
     .on("mouseleave", () => tooltip?.hide());
+}
 
-  scatterNoteEl.innerHTML = `
-    <p class="note-lede">Scatter guide</p>
-    <dl>
-      <dt>Diagonal</dt>
-      <dd>Exact match between the STA budget and the modeled spend.</dd>
-      <dt>Color</dt>
-      <dd>Blue = model predicts less oxygen than STA; orange = over budget. Neutral = near perfect.</dd>
-      <dt>Circle size</dt>
-      <dd>Scaled by achieved distance (longer dives draw larger circles).</dd>
-      <dt>Goal</dt>
-      <dd>Clusters around the diagonal signal that Step 1 intensities + shared parameters are consistent.</dd>
-    </dl>
-  `;
+function renderDistanceScatter() {
+  if (!distanceScatterEl) {
+    return;
+  }
+  distanceScatterEl.textContent = "";
+  const rows = (state.manualAttempts?.length ? state.manualAttempts : state.attempts).filter((row) =>
+    Number.isFinite(row.distance_m) && Number.isFinite(row.predicted_distance_m)
+  );
+  if (!rows.length) {
+    distanceScatterEl.textContent = "Predicted distance data unavailable.";
+    return;
+  }
+
+  const width = distanceScatterEl.clientWidth || 900;
+  const height = 300;
+  const margin = { top: 30, right: 28, bottom: 56, left: 64 };
+  const container = d3.select(distanceScatterEl);
+  const tooltip = createChartTooltip(container);
+  const svg = container
+    .append("svg")
+    .attr("viewBox", `0 0 ${width} ${height}`)
+    .attr("role", "img")
+    .attr("aria-label", "Predicted vs actual distance");
+
+  const actualDomain = expandDomain(d3.extent(rows, (row) => row.distance_m));
+  const predictedDomain = expandDomain(d3.extent(rows, (row) => row.predicted_distance_m));
+  const residuals = rows.map((row) => row.predicted_distance_m - row.distance_m);
+  const residualExtent = d3.extent(residuals);
+  const budgetExtent = d3.extent(rows, (row) => row.sta_budget_s);
+
+  const xScale = d3.scaleLinear().domain(actualDomain).range([margin.left, width - margin.right]);
+  const yScale = d3.scaleLinear().domain(predictedDomain).range([height - margin.bottom, margin.top]);
+  const maxResidual = Math.max(Math.abs(residualExtent[0] || 0), Math.abs(residualExtent[1] || 0)) || 1;
+  const color = d3
+    .scaleLinear()
+    .domain([-maxResidual, 0, maxResidual])
+    .range(["#22d3ee", "#e2e8f0", "#f97316"])
+    .clamp(true);
+  const radius = d3
+    .scaleLinear()
+    .domain(budgetExtent)
+    .range([4, 11])
+    .clamp(true);
+
+  const xAxis = d3.axisBottom(xScale).ticks(6).tickFormat((value) => `${value.toFixed(0)} m`);
+  const yAxis = d3.axisLeft(yScale).ticks(6).tickFormat((value) => `${value.toFixed(0)} m`);
+
+  svg
+    .append("g")
+    .attr("transform", `translate(0, ${height - margin.bottom})`)
+    .call(xAxis);
+
+  svg
+    .append("text")
+    .attr("x", width / 2)
+    .attr("y", height - 12)
+    .attr("text-anchor", "middle")
+    .attr("class", "axis-label")
+    .text("Actual distance (m)");
+
+  svg
+    .append("g")
+    .attr("transform", `translate(${margin.left}, 0)`)
+    .call(yAxis);
+
+  svg
+    .append("text")
+    .attr("transform", "rotate(-90)")
+    .attr("x", -height / 2)
+    .attr("y", 18)
+    .attr("text-anchor", "middle")
+    .attr("class", "axis-label")
+    .text("Predicted distance (m)");
+
+  const diagonalStart = Math.max(actualDomain[0], predictedDomain[0]);
+  const diagonalEnd = Math.min(actualDomain[1], predictedDomain[1]);
+  if (Number.isFinite(diagonalStart) && Number.isFinite(diagonalEnd)) {
+    svg
+      .append("line")
+      .attr("x1", xScale(diagonalStart))
+      .attr("y1", yScale(diagonalStart))
+      .attr("x2", xScale(diagonalEnd))
+      .attr("y2", yScale(diagonalEnd))
+      .attr("stroke", "#94a3b8")
+      .attr("stroke-dasharray", "6 6");
+  }
+
+  svg
+    .append("g")
+    .attr("class", "scatter-points")
+    .selectAll("circle")
+    .data(rows)
+    .enter()
+    .append("circle")
+    .attr("cx", (row) => xScale(row.distance_m))
+    .attr("cy", (row) => yScale(row.predicted_distance_m))
+    .attr("r", (row) => radius(row.sta_budget_s))
+    .attr("fill", (row) => color(row.predicted_distance_m - row.distance_m))
+    .attr("opacity", 0.85)
+    .on("mouseenter", (event, row) => {
+      const diff = row.predicted_distance_m - row.distance_m;
+      tooltip?.show(
+        event,
+        `
+          <strong>${row.name}</strong>
+          <div>Actual: ${formatNumber(row.distance_m, 1)} m</div>
+          <div>Predicted: ${formatNumber(row.predicted_distance_m, 1)} m</div>
+          <div>STA budget: ${formatSeconds(row.sta_budget_s)}</div>
+          <div>Δ distance: ${formatSignedNumber(diff, 1)} m</div>
+        `
+      );
+    })
+    .on("mousemove", (event) => tooltip?.move(event))
+    .on("mouseleave", () => tooltip?.hide());
 }
 
 function renderAttemptsTable() {
@@ -800,6 +913,28 @@ function countNegativeParameters(parameters) {
   return Object.values(parameters || {}).filter((value) => Number.isFinite(value) && value < 0).length;
 }
 
+function getSplitDistance(entry) {
+  const metaDistance = Number(entry?.metadata?.split_distance_m);
+  return Number.isFinite(metaDistance) && metaDistance > 0 ? metaDistance : DEFAULT_SPLIT_DISTANCE;
+}
+
+function attachPredictedDistance(rows = [], splitDistance = DEFAULT_SPLIT_DISTANCE) {
+  return rows.map((attempt) => ({
+    ...attempt,
+    predicted_distance_m: computePredictedDistance(attempt, splitDistance),
+  }));
+}
+
+function computePredictedDistance(attempt, splitDistance = DEFAULT_SPLIT_DISTANCE) {
+  const splitCost = Number(attempt?.split_o2_cost);
+  const budget = Number(attempt?.sta_budget_s);
+  if (!Number.isFinite(splitCost) || splitCost <= 0 || !Number.isFinite(budget) || budget <= 0) {
+    return NaN;
+  }
+  const predicted = (budget / splitCost) * splitDistance;
+  return Number.isFinite(predicted) ? predicted : NaN;
+}
+
 function expandDomain([min, max]) {
   if (!Number.isFinite(min) || !Number.isFinite(max)) {
     return [0, 1];
@@ -858,6 +993,33 @@ function computeManualMetrics(attempts = []) {
   };
 }
 
+function computeManualPredictedDistance(attempt, prediction, splitDistance) {
+  const budget = Number(attempt?.sta_budget_s);
+  const actualDistance = Number(attempt?.distance_m);
+  if (!Number.isFinite(budget) || budget <= 0 || !Number.isFinite(actualDistance) || actualDistance <= 0) {
+    return NaN;
+  }
+  if (!Number.isFinite(prediction) || prediction <= 0) {
+    return NaN;
+  }
+  return (budget * actualDistance) / prediction;
+}
+
+function paramsNearlyEqual(base = {}, candidate = {}) {
+  const EPS = 1e-6;
+  return PARAMETER_ORDER.every((key) => {
+    const a = Number(base[key]);
+    const b = Number(candidate[key]);
+    if (!Number.isFinite(a) && !Number.isFinite(b)) {
+      return true;
+    }
+    if (!Number.isFinite(a) || !Number.isFinite(b)) {
+      return false;
+    }
+    return Math.abs(a - b) < EPS;
+  });
+}
+
 function withCacheBust(url) {
   if (!url) {
     return url;
@@ -883,6 +1045,9 @@ function renderError(message) {
   }
   if (scatterEl) {
     scatterEl.textContent = message;
+  }
+  if (distanceScatterEl) {
+    distanceScatterEl.textContent = message;
   }
   if (attemptTableEl) {
     attemptTableEl.textContent = message;

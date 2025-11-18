@@ -112,6 +112,31 @@ details .table-container {
   gap: 0.75rem;
 }
 
+.manual-layout {
+  display: grid;
+  grid-template-columns: minmax(260px, 320px) 1fr;
+  gap: 1.5rem;
+  align-items: start;
+}
+
+.manual-layout__controls {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.manual-layout__charts {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+@media (max-width: 900px) {
+  .manual-layout {
+    grid-template-columns: 1fr;
+  }
+}
+
 .manual-control-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));

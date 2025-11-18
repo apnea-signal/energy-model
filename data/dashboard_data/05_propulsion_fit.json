@@ -54,7 +54,8 @@
           "static_o2_rate": 278.8892
         },
         "arm_pulls": 35.0,
-        "leg_kicks": 35.0
+        "leg_kicks": 35.0,
+        "split_o2_cost": 107.5933
       },
       {
         "name": "CHAN Kai-Hsiang",
@@ -83,7 +84,8 @@
           "static_o2_rate": 289.4134
         },
         "arm_pulls": 20.5,
-        "leg_kicks": 20.5
+        "leg_kicks": 20.5,
+        "split_o2_cost": 111.2502
       },
       {
         "name": "KUBIAK Piotr",
@@ -112,7 +114,8 @@
           "static_o2_rate": 251.5265
         },
         "arm_pulls": 25.0,
-        "leg_kicks": 25.0
+        "leg_kicks": 25.0,
+        "split_o2_cost": 107.1705
       },
       {
         "name": "BOURDILA Guillaume",
@@ -141,7 +144,8 @@
           "static_o2_rate": 273.6272
         },
         "arm_pulls": 18.0,
-        "leg_kicks": 23.0
+        "leg_kicks": 23.0,
+        "split_o2_cost": 108.5588
       },
       {
         "name": "QUESADA Francisco",
@@ -170,7 +174,8 @@
           "static_o2_rate": 217.8493
         },
         "arm_pulls": 21.5,
-        "leg_kicks": 21.5
+        "leg_kicks": 21.5,
+        "split_o2_cost": 119.2239
       },
       {
         "name": "PELES Vanja",
@@ -199,7 +204,8 @@
           "static_o2_rate": 228.3735
         },
         "arm_pulls": 26.5,
-        "leg_kicks": 26.5
+        "leg_kicks": 26.5,
+        "split_o2_cost": 108.3573
       },
       {
         "name": "CERIMAGIC Enes",
@@ -228,7 +234,8 @@
           "static_o2_rate": 232.5831
         },
         "arm_pulls": 35.0,
-        "leg_kicks": 40.0
+        "leg_kicks": 40.0,
+        "split_o2_cost": 107.396
       },
       {
         "name": "PAVKOVIC Nenad",
@@ -257,7 +264,8 @@
           "static_o2_rate": 228.3735
         },
         "arm_pulls": 14.0,
-        "leg_kicks": 54.0
+        "leg_kicks": 54.0,
+        "split_o2_cost": 106.9363
       },
       {
         "name": "BRIANTSEV Mikhail",
@@ -286,7 +294,8 @@
           "static_o2_rate": 241.0024
         },
         "arm_pulls": 29.0,
-        "leg_kicks": 33.0
+        "leg_kicks": 33.0,
+        "split_o2_cost": 106.3023
       },
       {
         "name": "LEE Po-Yen",
@@ -315,7 +324,8 @@
           "static_o2_rate": 214.6921
         },
         "arm_pulls": 22.5,
-        "leg_kicks": 45.0
+        "leg_kicks": 45.0,
+        "split_o2_cost": 108.593
       },
       {
         "name": "MILOSIC Boris",
@@ -344,7 +354,8 @@
           "static_o2_rate": 229.4259
         },
         "arm_pulls": 18.5,
-        "leg_kicks": 45.0
+        "leg_kicks": 45.0,
+        "split_o2_cost": 105.0406
       },
       {
         "name": "BOCHENEK Michal",
@@ -373,7 +384,8 @@
           "static_o2_rate": 231.5307
         },
         "arm_pulls": 24.0,
-        "leg_kicks": 24.0
+        "leg_kicks": 24.0,
+        "split_o2_cost": 107.1677
       },
       {
         "name": "SOPRONYI Andras",
@@ -402,7 +414,8 @@
           "static_o2_rate": 209.43
         },
         "arm_pulls": 25.5,
-        "leg_kicks": 25.5
+        "leg_kicks": 25.5,
+        "split_o2_cost": 106.9239
       },
       {
         "name": "RULAND Fernando",
@@ -431,7 +444,8 @@
           "static_o2_rate": 213.6397
         },
         "arm_pulls": 25.5,
-        "leg_kicks": 25.5
+        "leg_kicks": 25.5,
+        "split_o2_cost": 107.2486
       },
       {
         "name": "MAKSIMOV Aleksandr",
@@ -460,7 +474,8 @@
           "static_o2_rate": 235.7403
         },
         "arm_pulls": 30.5,
-        "leg_kicks": 30.5
+        "leg_kicks": 30.5,
+        "split_o2_cost": 104.0163
       },
       {
         "name": "DE WET Anton",
@@ -489,7 +504,8 @@
           "static_o2_rate": 216.7969
         },
         "arm_pulls": 26.0,
-        "leg_kicks": 26.0
+        "leg_kicks": 26.0,
+        "split_o2_cost": 103.9113
       },
       {
         "name": "NYMO Carl-Oscar",
@@ -518,7 +534,8 @@
           "static_o2_rate": 213.6397
         },
         "arm_pulls": 20.5,
-        "leg_kicks": 20.5
+        "leg_kicks": 20.5,
+        "split_o2_cost": 107.4345
       },
       {
         "name": "KIM Hakyong",
@@ -547,7 +564,8 @@
           "static_o2_rate": 207.3252
         },
         "arm_pulls": 36.5,
-        "leg_kicks": 36.5
+        "leg_kicks": 36.5,
+        "split_o2_cost": 102.425
       },
       {
         "name": "SADAN Valentin",
@@ -576,7 +594,8 @@
           "static_o2_rate": 154.7046
         },
         "arm_pulls": 23.5,
-        "leg_kicks": 47.0
+        "leg_kicks": 47.0,
+        "split_o2_cost": 106.5468
       }
     ],
     "parameter_order": [

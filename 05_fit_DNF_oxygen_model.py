@@ -99,6 +99,7 @@ class OutputAttempt:
     component_costs: Dict[str, float]
     arm_pulls: float
     leg_kicks: float
+    split_o2_cost: float | None = None
 
 
 def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
@@ -142,19 +143,25 @@ def main(argv: Sequence[str] | None = None) -> int:
             LOGGER.warning("Skipping %s – missing %s", dataset, csv_path)
             continue
         frame = pd.read_csv(csv_path)
-        intensity_lookup = build_intensity_lookup(movement_payload, dataset)
+        movement_lookup, movement_metadata = build_movement_lookup(movement_payload, dataset)
         samples = build_attempt_samples(
             frame,
             dataset=dataset,
             sta_lookup=sta_lookup,
-            intensity_lookup=intensity_lookup,
+            movement_lookup=movement_lookup,
             min_distance=args.min_distance,
         )
         if not samples:
             LOGGER.warning("Skipping %s – no attempts with STA + intensity overlap", dataset)
             continue
         fit = fit_parameters(samples)
-        payload = format_output(dataset, samples, fit)
+        payload = format_output(
+            dataset,
+            samples,
+            fit,
+            movement_lookup=movement_lookup,
+            metadata=movement_metadata or {},
+        )
         output_payload[dataset] = payload
 
     if not output_payload:
@@ -196,25 +203,23 @@ def load_sta_budgets(path: Path) -> Dict[str, float]:
     return lookup
 
 
-def build_intensity_lookup(movement_payload: dict, dataset: str) -> Dict[str, float]:
+def build_movement_lookup(movement_payload: dict, dataset: str) -> tuple[Dict[str, dict], dict | None]:
     dataset_payload = movement_payload.get(dataset, {}) if movement_payload else {}
-    athletes = dataset_payload.get("athletes") if isinstance(dataset_payload, dict) else None
+    if not isinstance(dataset_payload, dict):
+        return {}, None
+    athletes = dataset_payload.get("athletes")
+    metadata = dataset_payload.get("metadata") if isinstance(dataset_payload.get("metadata"), dict) else None
     if not isinstance(athletes, list):
-        return {}
-    lookup: Dict[str, float] = {}
+        return {}, metadata
+    lookup: Dict[str, dict] = {}
     for entry in athletes:
+        if not isinstance(entry, dict):
+            continue
         name = entry.get("name") or entry.get("Name")
         normalized = normalize_name(name)
-        if not normalized:
-            continue
-        movement_intensity = entry.get("movement_intensity")
-        try:
-            value = float(movement_intensity)
-        except (TypeError, ValueError):
-            continue
-        if math.isfinite(value) and value > 0:
-            lookup[normalized] = value
-    return lookup
+        if normalized:
+            lookup[normalized] = entry
+    return lookup, metadata
 
 
 def build_attempt_samples(
@@ -222,7 +227,7 @@ def build_attempt_samples(
     *,
     dataset: str,
     sta_lookup: Dict[str, float],
-    intensity_lookup: Dict[str, float],
+    movement_lookup: Dict[str, dict],
     min_distance: float,
 ) -> List[AttemptSample]:
     samples: List[AttemptSample] = []
@@ -243,12 +248,13 @@ def build_attempt_samples(
         leg_kicks = coerce_float(row.get("TK"))
         dolphin_kicks = coerce_float(row.get("TDK"))
         wall_pushes = resolve_wall_pushes(row)
-        raw_intensity = intensity_lookup.get(normalized)
-        intensity = (
-            float(raw_intensity)
-            if isinstance(raw_intensity, (int, float)) and math.isfinite(raw_intensity) and raw_intensity > 0
-            else 1.0
-        )
+        movement_entry = movement_lookup.get(normalized) if movement_lookup else None
+        raw_intensity = movement_entry.get("movement_intensity") if isinstance(movement_entry, dict) else None
+        try:
+            intensity_value = float(raw_intensity)
+        except (TypeError, ValueError):
+            intensity_value = float("nan")
+        intensity = intensity_value if math.isfinite(intensity_value) and intensity_value > 0 else 1.0
         movement_allowance = sta_budget - total_time
         if not math.isfinite(movement_allowance) or movement_allowance <= 0:
             LOGGER.debug(
@@ -343,8 +349,18 @@ def fit_parameters(samples: List[AttemptSample]) -> FitResult:
     )
 
 
-def format_output(dataset: str, samples: List[AttemptSample], fit: FitResult) -> dict:
+def format_output(
+    dataset: str,
+    samples: List[AttemptSample],
+    fit: FitResult,
+    *,
+    movement_lookup: Dict[str, dict],
+    metadata: dict | None,
+) -> dict:
     attempts: List[OutputAttempt] = []
+    split_distance = coerce_float((metadata or {}).get("split_distance_m"))
+    if not math.isfinite(split_distance) or split_distance <= 0:
+        split_distance = 50.0
     for sample, prediction, residual in zip(samples, fit.predictions, fit.residuals):
         features = sample.feature_vector()
         component_costs = {}
@@ -355,6 +371,13 @@ def format_output(dataset: str, samples: List[AttemptSample], fit: FitResult) ->
         static_feature = sample.total_time_s
         component_costs[PARAMETER_ORDER[-1]] = round(static_feature * fit.parameters[PARAMETER_ORDER[-1]], 4)
         feature_dict[PARAMETER_ORDER[-1]] = round(static_feature, 4)
+        movement_entry = movement_lookup.get(sample.normalized_name) if movement_lookup else None
+        split_o2_cost = compute_split_o2_cost(
+            sample,
+            parameters=fit.parameters,
+            movement_entry=movement_entry,
+            split_distance=split_distance,
+        )
         attempts.append(
             OutputAttempt(
                 name=sample.name,
@@ -368,6 +391,7 @@ def format_output(dataset: str, samples: List[AttemptSample], fit: FitResult) ->
                 component_costs={k: round(v, 4) for k, v in component_costs.items()},
                 arm_pulls=sample.arm_pulls,
                 leg_kicks=sample.leg_kicks,
+                split_o2_cost=round(split_o2_cost, 4) if split_o2_cost is not None else None,
             )
         )
     residual_seconds = [abs(attempt.residual_s) for attempt in attempts]
@@ -391,6 +415,93 @@ def format_output(dataset: str, samples: List[AttemptSample], fit: FitResult) ->
         "design_note": "Fit solves for (STA - swim_time) using intensity-scaled movement counts plus heart-rate and anaerobic time terms; swim_time is added back afterward",
     }
     return payload
+
+
+def compute_split_o2_cost(
+    sample: AttemptSample,
+    *,
+    parameters: Dict[str, float],
+    movement_entry: dict | None,
+    split_distance: float,
+) -> float | None:
+    if not parameters:
+        return None
+    splits = estimate_split_count(sample.distance_m, split_distance)
+    if splits <= 0:
+        return None
+    split_time = extract_split_time(movement_entry)
+    if not (math.isfinite(split_time) and split_time > 0):
+        split_time = sample.total_time_s / splits if splits > 0 else float("nan")
+    if not (math.isfinite(split_time) and split_time > 0):
+        return None
+    split_counts = extract_split_counts(sample, movement_entry, splits)
+    multiplier = sample.movement_intensity or 1.0
+    features = {
+        "wall_push_o2_cost": split_counts["wall_pushes"] * multiplier,
+        "arm_o2_cost": split_counts["arm_pulls"] * multiplier,
+        "leg_o2_cost": split_counts["leg_kicks"] * multiplier,
+        "dolphin_o2_cost": split_counts["dolphin_kicks"] * multiplier,
+        "intensity_time_o2_cost": split_time * multiplier,
+        "anaerobic_recovery_o2_cost": -split_time,
+    }
+    movement_cost = 0.0
+    for name, feature_value in features.items():
+        param_value = parameters.get(name)
+        if param_value is None:
+            continue
+        movement_cost += param_value * feature_value
+    static_rate = parameters.get("static_o2_rate", 0.0)
+    total_cost = movement_cost + static_rate * split_time
+    return total_cost if math.isfinite(total_cost) else None
+
+
+def extract_split_time(entry: dict | None) -> float:
+    if isinstance(entry, dict):
+        value = entry.get("split_time_s")
+        value = coerce_float(value)
+        if math.isfinite(value) and value > 0:
+            return value
+    return float("nan")
+
+
+def extract_split_counts(sample: AttemptSample, entry: dict | None, splits: float) -> Dict[str, float]:
+    counts = {
+        "arm_pulls": float("nan"),
+        "leg_kicks": float("nan"),
+        "dolphin_kicks": float("nan"),
+    }
+    if isinstance(entry, dict):
+        for field in counts:
+            value = coerce_float(entry.get(field))
+            if math.isfinite(value) and value >= 0:
+                counts[field] = value
+    resolved = {}
+    arm_default = sample.arm_pulls / splits if splits > 0 else float("nan")
+    leg_default = sample.leg_kicks / splits if splits > 0 else float("nan")
+    dolphin_default = sample.dolphin_kicks / splits if splits > 0 else 0.0
+    resolved["arm_pulls"] = counts["arm_pulls"] if math.isfinite(counts["arm_pulls"]) else arm_default
+    resolved["leg_kicks"] = counts["leg_kicks"] if math.isfinite(counts["leg_kicks"]) else leg_default
+    resolved["dolphin_kicks"] = (
+        counts["dolphin_kicks"] if math.isfinite(counts["dolphin_kicks"]) else dolphin_default
+    )
+    for key in ("arm_pulls", "leg_kicks", "dolphin_kicks"):
+        value = resolved.get(key)
+        if not (math.isfinite(value) and value >= 0):
+            resolved[key] = 0.0
+    wall_per_split = sample.wall_pushes / splits if splits > 0 else 1.0
+    if not (math.isfinite(wall_per_split) and wall_per_split > 0):
+        wall_per_split = 1.0
+    resolved["wall_pushes"] = wall_per_split
+    return resolved
+
+
+def estimate_split_count(distance_m: float, split_distance: float) -> float:
+    if not math.isfinite(distance_m) or distance_m <= 0:
+        return float("nan")
+    if not math.isfinite(split_distance) or split_distance <= 0:
+        split_distance = 50.0
+    splits = distance_m / split_distance
+    return max(1.0, splits)
 
 
 def compute_mean_abs_pct_error(attempts: Iterable[OutputAttempt]) -> float:
@@ -479,6 +590,7 @@ def attempt_to_dict(entry: OutputAttempt) -> dict:
         "component_costs": entry.component_costs,
         "arm_pulls": round(entry.arm_pulls, 3),
         "leg_kicks": round(entry.leg_kicks, 3),
+        "split_o2_cost": round(entry.split_o2_cost, 4) if entry.split_o2_cost is not None else None,
     }
 
 
