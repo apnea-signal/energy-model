@@ -13,6 +13,14 @@ const PARAMETER_ORDER = [
   "anaerobic_recovery_o2_cost",
   "static_o2_rate",
 ];
+const PENALTY_WEIGHTS = {
+  sta: { over: 1.0, under: 0.6 },
+  distance: { over: 1.6, under: 0.6 },
+};
+const COMBINED_SCORE_WEIGHTS = {
+  sta: 1,
+  distance: 2,
+};
 const PARAMETER_LABELS = {
   wall_push_o2_cost: "Wall push O₂ cost",
   arm_o2_cost: "Arm stroke O₂ cost",
@@ -72,6 +80,7 @@ const formulaNoteEl = document.getElementById("formulaNote");
 const formulaParametersEl = document.getElementById("formulaParameters");
 const manualControlsEl = document.getElementById("manualControls");
 const manualMetricsEl = document.getElementById("manualMetrics");
+const manualScoreFormulaEl = document.getElementById("manualScoreFormula");
 const metricsGridEl = document.getElementById("metricsGrid");
 const metricsNoteEl = document.getElementById("metricsNote");
 const parameterTableEl = document.getElementById("parameterTable");
@@ -399,9 +408,7 @@ function updateManualFitViews() {
 }
 
 function recomputeManualFit() {
-  const datasetParams = state.entry?.parameters || {};
   const manualParams = state.manualParams || {};
-  const useManualDistance = !paramsNearlyEqual(datasetParams, manualParams);
   const manualAttempts = (state.attempts || []).map((attempt) => {
     const features = attempt.features || {};
     let prediction = 0;
@@ -411,9 +418,7 @@ function recomputeManualFit() {
       prediction += coeff * featureValue;
     });
     const residual = prediction - attempt.sta_budget_s;
-    const predictedDistance = useManualDistance
-      ? computeManualPredictedDistance(attempt, prediction, state.splitDistance)
-      : attempt.predicted_distance_m;
+    const predictedDistance = computeManualPredictedDistance(attempt, prediction, state.splitDistance);
     return {
       ...attempt,
       prediction_s: prediction,
@@ -433,29 +438,32 @@ function renderManualMetrics() {
   const metrics = state.manualMetrics;
   if (!metrics) {
     manualMetricsEl.textContent = "Manual metrics unavailable.";
+    if (manualScoreFormulaEl) {
+      manualScoreFormulaEl.textContent = "";
+    }
     return;
   }
 
   const cards = [
     {
-      label: "Fitness (mean abs error)",
+      label: "Combined score",
+      value: formatNumber(metrics.combined_penalty, 3),
+      detail: "STA penalty + distance penalty (weighted)",
+    },
+    {
+      label: "STA penalty",
+      value: formatNumber(metrics.sta_penalty, 3),
+      detail: "Budget overshoot weighted more than undershoot",
+    },
+    {
+      label: "Distance penalty",
+      value: formatNumber(metrics.distance_penalty, 3),
+      detail: "Distance overshoot carries extra weight",
+    },
+    {
+      label: "Mean abs residual",
       value: formatNumber(metrics.mean_abs_error_s, 2, "s"),
-      detail: "Lower is better",
-    },
-    {
-      label: "Median abs error",
-      value: formatNumber(metrics.median_abs_error_s, 2, "s"),
-      detail: "Half the residuals fall below this",
-    },
-    {
-      label: "Max abs error",
-      value: formatNumber(metrics.max_abs_error_s, 2, "s"),
-      detail: "Worst miss",
-    },
-    {
-      label: "Mean abs % error",
-      value: formatPercent(metrics.mean_abs_pct_error),
-      detail: "Relative to STA budget",
+      detail: "Average |prediction − STA| in seconds",
     },
   ];
 
@@ -479,6 +487,11 @@ function renderManualMetrics() {
     manualMetricsEl.appendChild(article);
   });
 
+  if (manualScoreFormulaEl) {
+    const staWeight = COMBINED_SCORE_WEIGHTS.sta;
+    const distanceWeight = COMBINED_SCORE_WEIGHTS.distance;
+    manualScoreFormulaEl.textContent = `Combined Score = ${staWeight} × STA penalty + ${distanceWeight} × Distance penalty`;
+  }
 }
 
 function renderParameters() {
@@ -926,13 +939,21 @@ function attachPredictedDistance(rows = [], splitDistance = DEFAULT_SPLIT_DISTAN
 }
 
 function computePredictedDistance(attempt, splitDistance = DEFAULT_SPLIT_DISTANCE) {
-  const splitCost = Number(attempt?.split_o2_cost);
+  const prediction = Number(attempt?.prediction_s);
   const budget = Number(attempt?.sta_budget_s);
-  if (!Number.isFinite(splitCost) || splitCost <= 0 || !Number.isFinite(budget) || budget <= 0) {
-    return NaN;
+  const actualDistance = Number(attempt?.distance_m);
+  if (Number.isFinite(prediction) && prediction > 0 && Number.isFinite(budget) && budget > 0 && Number.isFinite(actualDistance) && actualDistance > 0) {
+    const predicted = (budget * actualDistance) / prediction;
+    if (Number.isFinite(predicted)) {
+      return predicted;
+    }
   }
-  const predicted = (budget / splitCost) * splitDistance;
-  return Number.isFinite(predicted) ? predicted : NaN;
+  const splitCost = Number(attempt?.split_o2_cost);
+  if (Number.isFinite(splitCost) && splitCost > 0 && Number.isFinite(budget) && budget > 0) {
+    const fallback = (budget / splitCost) * splitDistance;
+    return Number.isFinite(fallback) ? fallback : NaN;
+  }
+  return NaN;
 }
 
 function expandDomain([min, max]) {
@@ -973,24 +994,94 @@ function computeManualMetrics(attempts = []) {
     return null;
   }
   const absResiduals = attempts.map((attempt) => Math.abs(attempt.residual_s ?? 0));
-  const meanAbs = absResiduals.reduce((acc, value) => acc + value, 0) / absResiduals.length;
-  const sorted = [...absResiduals].sort((a, b) => a - b);
-  const mid = Math.floor(sorted.length / 2);
-  const medianAbs =
-    sorted.length % 2 === 0 ? (sorted[mid - 1] + sorted[mid]) / 2 : sorted[mid];
+  const meanAbs = average(absResiduals);
+  const medianAbs = median(absResiduals);
   const maxAbs = Math.max(...absResiduals);
   const pctErrors = attempts
     .map((attempt) => (attempt.sta_budget_s > 0 ? Math.abs(attempt.residual_s ?? 0) / attempt.sta_budget_s : NaN))
     .filter((value) => Number.isFinite(value));
-  const meanPct = pctErrors.length
-    ? pctErrors.reduce((acc, value) => acc + value, 0) / pctErrors.length
-    : NaN;
+  const meanPct = pctErrors.length ? average(pctErrors) : NaN;
+
+  const staPenalties = attempts
+    .map((attempt) => computeStaPenalty(attempt))
+    .filter((value) => Number.isFinite(value));
+  const distancePenalties = attempts
+    .map((attempt) => computeDistancePenalty(attempt))
+    .filter((value) => Number.isFinite(value));
+
+  const staPenalty = staPenalties.length ? average(staPenalties) : NaN;
+  const distancePenalty = distancePenalties.length ? average(distancePenalties) : NaN;
+  const combinedPenalty = computeCombinedPenalty(staPenalty, distancePenalty);
+
   return {
     mean_abs_error_s: meanAbs,
     median_abs_error_s: medianAbs,
     max_abs_error_s: maxAbs,
     mean_abs_pct_error: meanPct,
+    sta_penalty: staPenalty,
+    distance_penalty: distancePenalty,
+    combined_penalty: combinedPenalty,
   };
+}
+
+function computeStaPenalty(attempt) {
+  const budget = Number(attempt?.sta_budget_s);
+  if (!Number.isFinite(budget) || budget <= 0) {
+    return NaN;
+  }
+  const residual = Number(attempt?.residual_s);
+  if (!Number.isFinite(residual)) {
+    return NaN;
+  }
+  const normalized = Math.abs(residual) / budget;
+  const weight = residual >= 0 ? PENALTY_WEIGHTS.sta.over : PENALTY_WEIGHTS.sta.under;
+  return normalized * weight;
+}
+
+function computeDistancePenalty(attempt) {
+  const actual = Number(attempt?.distance_m);
+  const predicted = Number(attempt?.predicted_distance_m);
+  if (!Number.isFinite(actual) || actual <= 0 || !Number.isFinite(predicted) || predicted <= 0) {
+    return NaN;
+  }
+  const delta = predicted - actual;
+  const normalized = Math.abs(delta) / actual;
+  const weight = delta >= 0 ? PENALTY_WEIGHTS.distance.over : PENALTY_WEIGHTS.distance.under;
+  return normalized * weight;
+}
+
+function computeCombinedPenalty(staPenalty, distancePenalty) {
+  let total = 0;
+  let weightSum = 0;
+  if (Number.isFinite(staPenalty)) {
+    total += staPenalty * COMBINED_SCORE_WEIGHTS.sta;
+    weightSum += COMBINED_SCORE_WEIGHTS.sta;
+  }
+  if (Number.isFinite(distancePenalty)) {
+    total += distancePenalty * COMBINED_SCORE_WEIGHTS.distance;
+    weightSum += COMBINED_SCORE_WEIGHTS.distance;
+  }
+  if (weightSum <= 0) {
+    return NaN;
+  }
+  return total / weightSum;
+}
+
+function average(values = []) {
+  if (!values.length) {
+    return NaN;
+  }
+  const sum = values.reduce((acc, value) => acc + value, 0);
+  return sum / values.length;
+}
+
+function median(values = []) {
+  if (!values.length) {
+    return NaN;
+  }
+  const sorted = [...values].sort((a, b) => a - b);
+  const mid = Math.floor(sorted.length / 2);
+  return sorted.length % 2 === 0 ? (sorted[mid - 1] + sorted[mid]) / 2 : sorted[mid];
 }
 
 function computeManualPredictedDistance(attempt, prediction, splitDistance) {

@@ -14,8 +14,6 @@ from typing import Dict, Iterable, List, Mapping, Sequence
 
 import numpy as np
 import pandas as pd
-from sklearn.linear_model import LinearRegression
-
 LOGGER = logging.getLogger(__name__)
 DATASET_FILES: Mapping[str, str] = {
     "DNF": "DNF.csv",
@@ -25,13 +23,13 @@ DEFAULT_STA_FILE = Path("data/aida_greece_2025/STA_PB.csv")
 DEFAULT_MOVEMENT_FILE = Path("data/dashboard_data/03_movement_intensity.json")
 DEFAULT_OUTPUT = Path("data/dashboard_data/05_propulsion_fit.json")
 GD_DEFAULT_PARAMS = {
-    "wall_push_o2_cost": 1.0,
-    "arm_o2_cost": 1.5,
-    "leg_o2_cost": 1.0,
+    "wall_push_o2_cost": 2.5,
+    "arm_o2_cost": 3.5,
+    "leg_o2_cost": 2.5,
     "dolphin_o2_cost": 0.0,
-    "intensity_time_o2_cost": 0.0,
+    "intensity_time_o2_cost": 0.39,
     "anaerobic_recovery_o2_cost": 0.1,
-    "static_o2_rate": 1.8,
+    "static_o2_rate": 1.0,
 }
 GD_LR = 1e-5
 GD_MAX_ITER = 40_000
@@ -49,6 +47,11 @@ PARAMETER_ORDER = [
     "static_o2_rate",
 ]
 MOVEMENT_PARAMETER_ORDER = PARAMETER_ORDER[:-1]
+PENALTY_WEIGHTS = {
+    "sta": {"over": 1.0, "under": 0.6},
+    "distance": {"over": 1.6, "under": 0.6},
+}
+COMBINED_SCORE_WEIGHTS = {"sta": 1.0, "distance": 2.0}
 
 
 @dataclass
@@ -65,6 +68,7 @@ class AttemptSample:
     leg_kicks: float
     dolphin_kicks: float
     movement_allowance_s: float
+    feature_array: np.ndarray | None = None
 
     def feature_vector(self) -> List[float]:
         multiplier = self.movement_intensity or 1.0
@@ -289,6 +293,9 @@ def build_attempt_samples(
     if skipped:
         LOGGER.info("%s: skipped %d rows without STA reference", dataset, skipped)
     LOGGER.info("%s: built %d regression samples", dataset, len(samples))
+    for sample in samples:
+        features = sample.feature_vector() + [sample.total_time_s]
+        sample.feature_array = np.array(features, dtype=float)
     return samples
 
 
@@ -303,49 +310,34 @@ def resolve_wall_pushes(row: Mapping[str, object]) -> float:
 
 
 def fit_parameters(samples: List[AttemptSample]) -> FitResult:
-    design = np.array([sample.feature_vector() for sample in samples], dtype=float)
-    movement_targets = np.array([sample.movement_allowance_s for sample in samples], dtype=float)
-    raw_model = LinearRegression(fit_intercept=False)
-    raw_model.fit(design, movement_targets)
-    raw_solution = raw_model.coef_
-    weights = np.array([compute_sample_weight(sample, samples) for sample in samples], dtype=float)
-    constrained_solution = run_gradient_descent(
-        design,
-        movement_targets,
-        weights=weights,
-        initial=build_initial_params(),
-    )
-    movement_predictions = design @ constrained_solution
-    total_times = np.array([sample.total_time_s for sample in samples], dtype=float)
-    sta_targets = np.array([sample.sta_budget_s for sample in samples], dtype=float)
-    static_rate = solve_static_rate(residual=sta_targets - movement_predictions, times=total_times)
-    predictions = movement_predictions + static_rate * total_times
-    errors = predictions - sta_targets
-    movement_parameters = {name: float(value) for name, value in zip(MOVEMENT_PARAMETER_ORDER, constrained_solution)}
-    parameters = {**movement_parameters, PARAMETER_ORDER[-1]: static_rate}
-    raw_parameters = {name: float(value) for name, value in zip(MOVEMENT_PARAMETER_ORDER, raw_solution)}
-    raw_parameters[PARAMETER_ORDER[-1]] = STATIC_MIN
+    optimized_params = run_penalty_descent(samples, build_initial_params())
+    predictions = []
+    errors = []
+    for sample in samples:
+        feature_array = sample.feature_array
+        if feature_array is None:
+            predictions.append(float("nan"))
+            errors.append(float("nan"))
+            continue
+        prediction = float(np.dot(feature_array, optimized_params))
+        predictions.append(prediction)
+        errors.append(prediction - sample.sta_budget_s)
+    parameters = {name: float(value) for name, value in zip(PARAMETER_ORDER, optimized_params)}
     LOGGER.info(
-        "Non-negative fit: %s",
+        "Optimized parameters: %s",
         ", ".join(f"%s=%.4f" % (name, value) for name, value in parameters.items()),
     )
-    negative_raw = [name for name, value in raw_parameters.items() if value < 0]
-    if negative_raw:
-        LOGGER.info(
-            "Unconstrained (reference) fit: %s",
-            ", ".join(f"%s=%.4f" % (name, value) for name, value in raw_parameters.items()),
-        )
     LOGGER.info(
-        "Residuals: mean=%.2f s, median=%.2f s, max=%.2f s",
-        float(np.mean(np.abs(errors))),
-        float(np.median(np.abs(errors))),
-        float(np.max(np.abs(errors))),
+        "STA residuals: mean=%.2f s, median=%.2f s, max=%.2f s",
+        float(np.nanmean(np.abs(errors))),
+        float(np.nanmedian(np.abs(errors))),
+        float(np.nanmax(np.abs(errors))),
     )
     return FitResult(
         parameters=parameters,
         residuals=list(errors),
         predictions=list(predictions),
-        unconstrained_parameters=raw_parameters,
+        unconstrained_parameters=dict(parameters),
     )
 
 
@@ -515,57 +507,102 @@ def compute_mean_abs_pct_error(attempts: Iterable[OutputAttempt]) -> float:
 
 
 def build_initial_params() -> np.ndarray:
-    values = [GD_DEFAULT_PARAMS.get(name, 1.0) for name in MOVEMENT_PARAMETER_ORDER]
+    values = [GD_DEFAULT_PARAMS.get(name, 1.0) for name in PARAMETER_ORDER]
     return np.array(values, dtype=float)
 
 
-def compute_sample_weight(sample: AttemptSample, samples: List[AttemptSample]) -> float:
-    return 1.0
-
-
-def run_gradient_descent(
-    design: np.ndarray,
-    targets: np.ndarray,
-    *,
-    weights: np.ndarray,
-    initial: np.ndarray,
-) -> np.ndarray:
-    params = np.maximum(initial.copy(), 0.0)
-    if weights.shape[0] != targets.shape[0]:
-        weights = np.ones_like(targets)
-    weight_sum = float(np.sum(weights)) or float(len(targets))
+def run_penalty_descent(samples: List[AttemptSample], initial: np.ndarray) -> np.ndarray:
+    params = initial.astype(float)
     for iteration in range(GD_MAX_ITER):
-        preds = design @ params
-        residuals = preds - targets
-        grad = (design.T @ (weights * residuals)) / weight_sum
+        grad = np.zeros_like(params)
+        penalty_sum = 0.0
+        valid = 0
+        for sample in samples:
+            feature_array = sample.feature_array
+            if feature_array is None:
+                continue
+            prediction = float(np.dot(feature_array, params))
+            penalty, derivative = combined_penalty_and_gradient(sample, prediction)
+            if not math.isfinite(penalty):
+                continue
+            penalty_sum += penalty
+            valid += 1
+            if math.isfinite(derivative):
+                grad += derivative * feature_array
+        if not valid:
+            LOGGER.warning("No valid samples contributed to the optimization gradient")
+            break
+        grad /= valid
         update = GD_LR * grad
         params -= update
-        params = np.maximum(params, 0.0)
-        enforce_hierarchy_constraints(params)
+        enforce_parameter_bounds(params)
         if np.linalg.norm(update) < GD_TOL:
-            LOGGER.debug("Gradient descent converged after %d iterations", iteration + 1)
+            LOGGER.debug("Penalty descent converged after %d iterations (avg combined penalty %.4f)", iteration + 1, penalty_sum / valid)
             break
     else:
-            LOGGER.debug("Gradient descent reached max iterations (%d)", GD_MAX_ITER)
+        LOGGER.debug("Penalty descent reached max iterations (%d)", GD_MAX_ITER)
     return params
 
 
-def solve_static_rate(residual: np.ndarray, times: np.ndarray) -> float:
-    if residual.size == 0 or times.size == 0:
-        return STATIC_MIN
-    numerator = np.dot(residual, times)
-    denominator = np.dot(times, times)
-    if denominator <= 0:
-        return STATIC_MIN
-    rate = numerator / denominator
-    return max(rate, STATIC_MIN)
+def combined_penalty_and_gradient(sample: AttemptSample, prediction: float) -> tuple[float, float]:
+    sta_penalty, sta_grad = sta_penalty_and_gradient(sample, prediction)
+    distance_penalty, distance_grad = distance_penalty_and_gradient(sample, prediction)
+    total_weight = 0.0
+    weighted_penalty = 0.0
+    weighted_grad = 0.0
+    if math.isfinite(sta_penalty):
+        weight = COMBINED_SCORE_WEIGHTS["sta"]
+        weighted_penalty += sta_penalty * weight
+        weighted_grad += sta_grad * weight
+        total_weight += weight
+    if math.isfinite(distance_penalty):
+        weight = COMBINED_SCORE_WEIGHTS["distance"]
+        weighted_penalty += distance_penalty * weight
+        weighted_grad += distance_grad * weight
+        total_weight += weight
+    if total_weight <= 0:
+        return float("nan"), 0.0
+    return weighted_penalty / total_weight, weighted_grad / total_weight
+
+
+def sta_penalty_and_gradient(sample: AttemptSample, prediction: float) -> tuple[float, float]:
+    budget = sample.sta_budget_s
+    residual = prediction - budget
+    weight = PENALTY_WEIGHTS["sta"]["over" if residual >= 0 else "under"]
+    penalty = weight * abs(residual) / budget
+    grad = weight * (1.0 if residual >= 0 else -1.0) / budget
+    return penalty, grad
+
+
+def distance_penalty_and_gradient(sample: AttemptSample, prediction: float) -> tuple[float, float]:
+    budget = sample.sta_budget_s
+    actual_distance = sample.distance_m
+    if prediction <= 0 or actual_distance <= 0:
+        return float("nan"), 0.0
+    numerator = budget * actual_distance
+    predicted_distance = numerator / prediction
+    delta = predicted_distance - actual_distance
+    weight = PENALTY_WEIGHTS["distance"]["over" if delta >= 0 else "under"]
+    penalty = weight * abs(delta) / actual_distance
+    grad_predicted_distance = -numerator / (prediction ** 2)
+    grad = weight * (1.0 if delta >= 0 else -1.0) * grad_predicted_distance / actual_distance
+    return penalty, grad
+
+
+def enforce_parameter_bounds(params: np.ndarray) -> None:
+    for idx, name in enumerate(PARAMETER_ORDER):
+        if name == "static_o2_rate":
+            params[idx] = max(params[idx], STATIC_MIN)
+        else:
+            params[idx] = max(params[idx], 0.0)
+    enforce_hierarchy_constraints(params)
 
 
 def enforce_hierarchy_constraints(params: np.ndarray) -> None:
     try:
-        wall_idx = MOVEMENT_PARAMETER_ORDER.index("wall_push_o2_cost")
-        leg_idx = MOVEMENT_PARAMETER_ORDER.index("leg_o2_cost")
-        arm_idx = MOVEMENT_PARAMETER_ORDER.index("arm_o2_cost")
+        wall_idx = PARAMETER_ORDER.index("wall_push_o2_cost")
+        leg_idx = PARAMETER_ORDER.index("leg_o2_cost")
+        arm_idx = PARAMETER_ORDER.index("arm_o2_cost")
     except ValueError:
         return
     if params[wall_idx] < params[leg_idx]:
