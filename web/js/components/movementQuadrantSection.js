@@ -1,6 +1,6 @@
 import * as d3 from "https://cdn.jsdelivr.net/npm/d3@7/+esm";
 import { normalizeName } from "../utils.js";
-import { appendChartTitle, renderBandScatterChart } from "./chartWithBands.js";
+import { appendChartTitle, extendBandSamplesToDomain, renderBandScatterChart } from "./chartWithBands.js";
 
 export function createMovementQuadrantSection({ chartEl, noteEl }) {
   function update({ dataset, movement = [], data = [], bands = {} } = {}) {
@@ -70,25 +70,23 @@ function renderCharts(containerEl, movementEntries, datasetRows, bands, dataset)
 }
 
 function drawIntensityVsDistance(container, rows, band) {
+  const distanceDomain = getPaddedDomain(rows.map((row) => row.distance));
   const chart = renderBandScatterChart({
     containerEl: container,
     data: rows,
     xAccessor: (row) => row.distance,
     yAccessor: (row) => row.movementIntensity,
-    xDomain: d3.extent(rows, (row) => row.distance),
+    xDomain: distanceDomain,
     yDomain: expandDomain(d3.extent(rows, (row) => row.movementIntensity)),
     xTickFormat: (value) => `${value.toFixed(0)} m`,
     ariaLabel: "Movement intensity vs distance",
     getPointColor: () => "#2563eb",
     getPointRadius: () => 6,
-    band: band?.samples?.length
-      ? {
-          samples: band.samples,
-          fill: "#bfdbfe",
-          stroke: "#60a5fa",
-          fillOpacity: 0.3,
-        }
-      : undefined,
+    band: prepareBandConfig(band, distanceDomain, {
+      fill: "#bfdbfe",
+      stroke: "#60a5fa",
+      fillOpacity: 0.3,
+    }),
     tooltipFormatter: (row) => `
           <strong>${row.name}</strong>
           <div>Distance: ${row.distance?.toFixed(0) ?? ""} m</div>
@@ -100,26 +98,24 @@ function drawIntensityVsDistance(container, rows, band) {
 }
 
 function drawWorkBiasVsDistance(container, rows, band) {
+  const distanceDomain = getPaddedDomain(rows.map((row) => row.distance));
   const yDomain = buildRatioDomain(rows.map((row) => row.workBias));
   const chart = renderBandScatterChart({
     containerEl: container,
     data: rows,
     xAccessor: (row) => row.distance,
     yAccessor: (row) => row.workBias,
-    xDomain: d3.extent(rows, (row) => row.distance),
+    xDomain: distanceDomain,
     yDomain,
     xTickFormat: (value) => `${value.toFixed(0)} m`,
     ariaLabel: "Leg/arm work ratio vs distance",
     getPointColor: () => "#16a34a",
     getPointRadius: () => 6,
-    band: band?.samples?.length
-      ? {
-          samples: band.samples,
-          fill: "#bbf7d0",
-          stroke: "#22c55e",
-          fillOpacity: 0.35,
-        }
-      : undefined,
+    band: prepareBandConfig(band, distanceDomain, {
+      fill: "#bbf7d0",
+      stroke: "#22c55e",
+      fillOpacity: 0.35,
+    }),
     referenceLines: [
       {
         type: "horizontal",
@@ -136,6 +132,26 @@ function drawWorkBiasVsDistance(container, rows, band) {
   });
 
   appendChartTitle(chart, "Leg vs arm work ratio vs distance");
+}
+
+function prepareBandConfig(band, domain, overrides = {}) {
+  if (!band?.samples?.length || !domain) {
+    return undefined;
+  }
+  const samples = extendBandSamplesToDomain(band.samples, band.metadata, domain);
+  return {
+    samples,
+    fill: overrides.fill || "#bfdbfe",
+    stroke: overrides.stroke || "#60a5fa",
+    fillOpacity: overrides.fillOpacity ?? 0.3,
+    strokeWidth: overrides.strokeWidth || 1.5,
+  };
+}
+
+function getPaddedDomain(values) {
+  const rawExtent = d3.extent(values);
+  const padding = computeAxisPadding(values);
+  return applyDomainPadding(rawExtent, padding);
 }
 
 function numberOrNaN(value) {
@@ -190,4 +206,39 @@ function buildRatioDomain(values) {
   min = Math.min(min, 1 - padding);
   max = Math.max(max, 1 + padding);
   return [Math.max(0, min), Math.max(max, 0.2)];
+}
+
+function computeAxisPadding(values) {
+  const numericValues = values.filter((value) => Number.isFinite(value));
+  if (numericValues.length < 2) {
+    return 5;
+  }
+  const sorted = numericValues.slice().sort((a, b) => a - b);
+  let smallestGap = Infinity;
+  for (let i = 1; i < sorted.length; i += 1) {
+    const gap = sorted[i] - sorted[i - 1];
+    if (Number.isFinite(gap) && gap > 0) {
+      smallestGap = Math.min(smallestGap, gap);
+    }
+  }
+  if (!Number.isFinite(smallestGap) || smallestGap === Infinity) {
+    const span = sorted[sorted.length - 1] - sorted[0];
+    return Math.max(5, span * 0.05);
+  }
+  return Math.max(5, smallestGap * 0.5);
+}
+
+function applyDomainPadding(domain, padding) {
+  if (!domain || domain.length !== 2) {
+    return domain;
+  }
+  const [min, max] = domain;
+  if (!Number.isFinite(min) || !Number.isFinite(max)) {
+    return domain;
+  }
+  const pad = Number.isFinite(padding) ? Math.max(0, padding) : 0;
+  if (!pad) {
+    return domain;
+  }
+  return [min - pad, max + pad];
 }

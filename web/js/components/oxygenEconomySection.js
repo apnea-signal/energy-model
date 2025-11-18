@@ -1,5 +1,5 @@
 import * as d3 from "https://cdn.jsdelivr.net/npm/d3@7/+esm";
-import { appendChartTitle, renderBandScatterChart } from "./chartWithBands.js";
+import { appendChartTitle, extendBandSamplesToDomain, renderBandScatterChart } from "./chartWithBands.js";
 
 export function createOxygenEconomySection({ chartEl, noteEl }) {
   function update({ dataset, propulsion = {}, splitDistance = 50, band } = {}) {
@@ -30,9 +30,21 @@ function renderOxygenChart(containerEl, { propulsion, splitDistance, band }) {
     return;
   }
 
-  const xDomain = padDomainFromData(d3.extent(rows, (row) => row.actualDistance));
-  const yDomain = padDomain(d3.extent(rows, (row) => row.predictedDistance));
+  const baseBandSamples = Array.isArray(band?.samples) ? band.samples : [];
+  const dataExtent = d3.extent(rows, (row) => row.actualDistance);
+  const bandTargetDomain = buildBandTargetDomain(band, dataExtent);
+  const initialBandSamples = extendBandSamplesToDomain(baseBandSamples, band?.metadata, bandTargetDomain);
+  const xValues = rows
+    .map((row) => row.actualDistance)
+    .concat(initialBandSamples.map((sample) => sample.x))
+    .concat(bandTargetDomain || []);
+  const yValues = rows
+    .map((row) => row.predictedDistance)
+    .concat(initialBandSamples.flatMap((sample) => [sample.lower, sample.upper]));
+  const xDomain = applyDomainPadding(buildTightDomain(xValues), computeAxisPadding(xValues));
+  const yDomain = buildTightDomain(yValues);
   const diagonalReference = buildDiagonalReference(xDomain, yDomain);
+  const bandSamples = extendBandSamplesToDomain(baseBandSamples, band?.metadata, xDomain);
 
   const chart = renderBandScatterChart({
     containerEl,
@@ -49,9 +61,9 @@ function renderOxygenChart(containerEl, { propulsion, splitDistance, band }) {
     ariaLabel: "Realised vs oxygen-limited distance",
     getPointColor: () => "#0ea5e9",
     getPointRadius: () => 6,
-    band: band?.samples?.length
+    band: bandSamples.length
       ? {
-          samples: band.samples,
+          samples: bandSamples,
           fill: "#fde68a",
           stroke: "#f59e0b",
           fillOpacity: 0.35,
@@ -113,26 +125,27 @@ function computePredictedDistanceFromSplit({ splitCost, budget, splitDistance })
   return (budget / splitCost) * splitDistance;
 }
 
-function padDomain([min, max] = []) {
-  if (!Number.isFinite(min) || !Number.isFinite(max)) {
+function padDomain([min, max] = [], extraValues = []) {
+  return buildTightDomain([min, max, ...extraValues]);
+}
+
+function padDomainFromData([min, max] = [], extraValues = []) {
+  return buildTightDomain([min, max, ...extraValues]);
+}
+
+function buildTightDomain(values = []) {
+  const numericValues = values.filter((value) => Number.isFinite(value));
+  if (!numericValues.length) {
     return [0, 1];
   }
+  let min = Math.min(...numericValues);
+  let max = Math.max(...numericValues);
   if (min === max) {
-    const pad = Math.max(5, min * 0.05 || 5);
+    const pad = Math.max(5, Math.abs(min) * 0.05 || 5);
     min -= pad;
     max += pad;
   }
-  const padding = (max - min) * 0.08 || 5;
-  return [Math.max(0, min - padding), max + padding];
-}
-
-function padDomainFromData([min, max] = []) {
-  if (!Number.isFinite(min) || !Number.isFinite(max)) {
-    return [0, 1];
-  }
-  const span = Math.max(max - min, 1);
-  const padding = span * 0.08 || 5;
-  return [Math.max(0, min - padding), max + padding];
+  return [Math.max(0, min), max];
 }
 
 function buildDiagonalReference(xDomain, yDomain) {
@@ -159,4 +172,64 @@ function buildDiagonalReference(xDomain, yDomain) {
 
 function isValidDomain(domain) {
   return Array.isArray(domain) && domain.length === 2 && domain.every((value) => Number.isFinite(value));
+}
+
+function buildBandTargetDomain(band, fallbackDomain) {
+  const samples = Array.isArray(band?.samples) ? band.samples : [];
+  const metaMin = Number(band?.metadata?.x_min);
+  const metaMax = Number(band?.metadata?.x_max);
+  const sampleXs = samples.map((sample) => Number(sample.x)).filter((value) => Number.isFinite(value));
+  const fallbackValues = Array.isArray(fallbackDomain) ? fallbackDomain.filter((value) => Number.isFinite(value)) : [];
+  const candidates = [];
+  if (Number.isFinite(metaMin)) {
+    candidates.push(metaMin);
+  }
+  if (Number.isFinite(metaMax)) {
+    candidates.push(metaMax);
+  }
+  candidates.push(...sampleXs, ...fallbackValues);
+  if (!candidates.length) {
+    return null;
+  }
+  const min = Math.min(...candidates);
+  const max = Math.max(...candidates);
+  if (!Number.isFinite(min) || !Number.isFinite(max)) {
+    return null;
+  }
+  return [min, max];
+}
+
+function computeAxisPadding(values) {
+  const numericValues = values.filter((value) => Number.isFinite(value));
+  if (numericValues.length < 2) {
+    return 5;
+  }
+  const sorted = numericValues.slice().sort((a, b) => a - b);
+  let smallestGap = Infinity;
+  for (let i = 1; i < sorted.length; i += 1) {
+    const gap = sorted[i] - sorted[i - 1];
+    if (Number.isFinite(gap) && gap > 0) {
+      smallestGap = Math.min(smallestGap, gap);
+    }
+  }
+  if (!Number.isFinite(smallestGap) || smallestGap === Infinity) {
+    const span = sorted[sorted.length - 1] - sorted[0];
+    return Math.max(5, span * 0.05);
+  }
+  return Math.max(5, smallestGap * 0.5);
+}
+
+function applyDomainPadding(domain, padding) {
+  if (!domain || domain.length !== 2) {
+    return domain;
+  }
+  const [min, max] = domain;
+  if (!Number.isFinite(min) || !Number.isFinite(max)) {
+    return domain;
+  }
+  const pad = Number.isFinite(padding) ? Math.max(0, padding) : 0;
+  if (!pad) {
+    return domain;
+  }
+  return [Math.max(0, min - pad), max + pad];
 }

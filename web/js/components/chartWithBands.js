@@ -18,6 +18,8 @@ export function renderBandScatterChart({
   xLabel,
   yLabel,
   ariaLabel,
+  xPadding,
+  yPadding,
   getPointColor = () => "#2563eb",
   getPointRadius = () => 5,
   getPointStroke = () => undefined,
@@ -44,8 +46,8 @@ export function renderBandScatterChart({
     left: Number.isFinite(margin.left) ? margin.left : 64,
   };
 
-  const resolvedXDomain = resolveDomain(xDomain, data, xAccessor);
-  const resolvedYDomain = resolveDomain(yDomain, data, yAccessor);
+  const resolvedXDomain = resolveDomain(xDomain, data, xAccessor, xPadding);
+  const resolvedYDomain = resolveDomain(yDomain, data, yAccessor, yPadding);
 
   const xScale = d3.scaleLinear().domain(resolvedXDomain).range([resolvedMargin.left, effectiveWidth - resolvedMargin.right]);
   const yScale = d3.scaleLinear().domain(resolvedYDomain).range([effectiveHeight - resolvedMargin.bottom, resolvedMargin.top]);
@@ -176,7 +178,7 @@ export function appendChartTitle(chart, label) {
     .text(label);
 }
 
-function resolveDomain(domain, data, accessor) {
+function resolveDomain(domain, data, accessor, overridePadding) {
   if (isValidDomain(domain)) {
     return domain;
   }
@@ -189,12 +191,25 @@ function resolveDomain(domain, data, accessor) {
     const pad = Math.max(0.05, Math.abs(min) * 0.1 || 0.1);
     return [min - pad, max + pad];
   }
-  const padding = (max - min) * 0.08 || 0.05;
+  const padding = Number.isFinite(overridePadding)
+    ? Math.max(0, overridePadding)
+    : (max - min) * 0.08 || 0.05;
   return [min - padding, max + padding];
 }
 
 function isValidDomain(domain) {
   return Array.isArray(domain) && domain.length === 2 && domain.every((value) => Number.isFinite(value));
+}
+
+export function extendBandSamplesToDomain(samples = [], metadata = {}, domain) {
+  const normalizedSamples = Array.isArray(samples) ? samples.slice().sort((a, b) => a.x - b.x) : [];
+  if (!normalizedSamples.length || !isValidDomain(domain)) {
+    return normalizedSamples;
+  }
+  const [start, end] = domain;
+  addProjectedBandSample(normalizedSamples, start, metadata);
+  addProjectedBandSample(normalizedSamples, end, metadata);
+  return normalizedSamples.sort((a, b) => a.x - b.x);
 }
 
 function drawBand(
@@ -348,4 +363,83 @@ function drawReferenceLines(svg, referenceLines, { xScale, yScale, width, height
       }
     }
   });
+}
+
+function addProjectedBandSample(collection, targetX, metadata) {
+  if (!Number.isFinite(targetX)) {
+    return;
+  }
+  const epsilon = 1e-3;
+  if (collection.some((sample) => Math.abs(sample.x - targetX) <= epsilon)) {
+    return;
+  }
+  const projected = projectBandSample(collection, targetX, metadata);
+  if (projected) {
+    collection.push(projected);
+  }
+}
+
+function projectBandSample(collection, targetX, metadata) {
+  const center = computeBandCenter(collection, targetX, metadata);
+  const halfWidth = computeBandHalfWidth(collection, metadata);
+  if (!Number.isFinite(center) || !Number.isFinite(halfWidth)) {
+    return null;
+  }
+  return {
+    x: targetX,
+    center,
+    lower: center - halfWidth,
+    upper: center + halfWidth,
+  };
+}
+
+function computeBandCenter(collection, targetX, metadata) {
+  const slope = Number(metadata?.slope);
+  const interceptOptions = [metadata?.intercept, metadata?.offset, metadata?.offset_seconds, metadata?.baseline]
+    .map((value) => Number(value))
+    .filter((value) => Number.isFinite(value));
+  if (Number.isFinite(slope)) {
+    const intercept = interceptOptions.length ? interceptOptions[0] : 0;
+    return slope * targetX + intercept;
+  }
+  const ordered = collection.slice().sort((a, b) => a.x - b.x);
+  if (!ordered.length) {
+    return NaN;
+  }
+  if (ordered.length === 1) {
+    return ordered[0].center;
+  }
+  if (targetX <= ordered[0].x) {
+    return projectCenterFromSegment(targetX, ordered[0], ordered[1]);
+  }
+  const last = ordered[ordered.length - 1];
+  if (targetX >= last.x) {
+    return projectCenterFromSegment(targetX, ordered[ordered.length - 2], last);
+  }
+  for (let i = 0; i < ordered.length - 1; i += 1) {
+    const current = ordered[i];
+    const next = ordered[i + 1];
+    if (targetX >= current.x && targetX <= next.x) {
+      return projectCenterFromSegment(targetX, current, next);
+    }
+  }
+  return ordered[ordered.length - 1].center;
+}
+
+function projectCenterFromSegment(targetX, startSample, endSample) {
+  const span = endSample.x - startSample.x || 1;
+  const ratio = (targetX - startSample.x) / span;
+  return startSample.center + (endSample.center - startSample.center) * ratio;
+}
+
+function computeBandHalfWidth(collection, metadata) {
+  const width = Number(metadata?.band_width);
+  if (Number.isFinite(width) && width > 0) {
+    return width / 2;
+  }
+  const reference = collection.find((sample) => Number.isFinite(sample.upper) && Number.isFinite(sample.center));
+  if (reference) {
+    return Math.abs(reference.upper - reference.center);
+  }
+  return 0;
 }
