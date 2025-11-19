@@ -105,3 +105,12 @@ Run the lightweight unit tests with:
 ```shell
 pytest
 ```
+
+## Deployment
+Pushes to the `main` branch (or a manual run from the Actions tab) trigger
+`.github/workflows/deploy-pages.yml`. The workflow installs the Python data
+dependencies, re-runs `run_all.py` so that the JSON files under
+`data/dashboard_data/` stay in sync with the source CSVs, and then uploads the
+`web/`, `data/`, and `docs/` directories plus `favicon.ico` as the GitHub Pages
+artifact. Once the workflow completes, the dashboards are available from the
+repository's GitHub Pages URL (e.g. `https://<org>.github.io/<repo>/web/exploration.html`).
