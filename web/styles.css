@@ -196,6 +196,13 @@ details .table-container {
   gap: 0.75rem;
 }
 
+.calculator-input-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
 .score-note {
   margin: 0;
   font-size: 0.85rem;

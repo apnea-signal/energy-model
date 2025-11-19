@@ -1,78 +1,18 @@
 import * as d3 from "https://cdn.jsdelivr.net/npm/d3@7/+esm";
 import { createChartTooltip, formatSeconds } from "./utils.js";
+import {
+  PARAMETER_ORDER,
+  PARAMETER_LABELS,
+  FORMULA_ROWS,
+  COMBINED_SCORE_WEIGHTS,
+  computeManualMetrics,
+  computeManualPredictedDistance,
+  applyParametersToFeatures,
+} from "./models/dnfPerformanceModel.js";
 
 const CACHE_BUST_TOKEN = Date.now().toString(36);
 const DATA_URL = withCacheBust("../data/dashboard_data/05_propulsion_fit.json");
 const DEFAULT_SPLIT_DISTANCE = 50;
-const PARAMETER_ORDER = [
-  "wall_push_o2_cost",
-  "arm_o2_cost",
-  "leg_o2_cost",
-  "dolphin_o2_cost",
-  "intensity_time_o2_cost",
-  "anaerobic_recovery_o2_cost",
-  "static_o2_rate",
-];
-const PENALTY_WEIGHTS = {
-  sta: { over: 1.0, under: 0.6 },
-  distance: { over: 1.6, under: 0.6 },
-};
-const COMBINED_SCORE_WEIGHTS = {
-  sta: 1,
-  distance: 2,
-};
-const PARAMETER_LABELS = {
-  wall_push_o2_cost: "Wall push O₂ cost",
-  arm_o2_cost: "Arm stroke O₂ cost",
-  leg_o2_cost: "Leg kick O₂ cost",
-  dolphin_o2_cost: "Dolphin O₂ cost",
-  intensity_time_o2_cost: "Intensity × time O₂ cost",
-  anaerobic_recovery_o2_cost: "Anaerobic recovery O₂ credit",
-  static_o2_rate: "Static metabolic rate",
-};
-
-const PARAMETER_SYMBOLS = {
-  wall_push_o2_cost: "P_w",
-  arm_o2_cost: "P_a",
-  leg_o2_cost: "P_l",
-  dolphin_o2_cost: "P_d",
-  intensity_time_o2_cost: "P_i",
-  anaerobic_recovery_o2_cost: "P_{ar}",
-  static_o2_rate: "R_s",
-};
-
-const PARAMETER_DESCRIPTIONS = {
-  wall_push_o2_cost: "O₂ per intensity-scaled wall push (one per turn).",
-  arm_o2_cost: "O₂ per arm cycle after intensity scaling.",
-  leg_o2_cost: "O₂ per single-leg kick (stroke + post-push).",
-  dolphin_o2_cost: "O₂ per stabilizing dolphin kick.",
-  intensity_time_o2_cost: "Heart-rate coupling term applied to intensity × swim time.",
-  anaerobic_recovery_o2_cost: "Anaerobic relief term that subtracts O₂ as time extends (negative).",
-  static_o2_rate: "Baseline O₂ draw multiplied by swim duration.",
-};
-
-const FORMULA_ROWS = [
-  {
-    symbol: "I",
-    label: "Movement intensity",
-    description: "Athlete-specific scalar from Step 1 applied to each propulsion count.",
-  },
-  ...PARAMETER_ORDER.map((key) => ({
-    symbol: PARAMETER_SYMBOLS[key] || "",
-    label: PARAMETER_LABELS[key] || key,
-    description: PARAMETER_DESCRIPTIONS[key] || "",
-  })),
-  {
-    symbol: "N_*",
-    label: "Movement counts",
-    description: "Per-attempt wall, arm, leg, and dolphin counts sourced from the DNF annotations.",
-  },
-  {
-    symbol: "T",
-    label: "Swim duration",
-    description: "Total attempt time (seconds) used for the static metabolic term.",
-  },
-];
 
 const datasetMenu = document.getElementById("datasetMenu");
 const datasetLabelEl = document.getElementById("datasetLabel");
@@ -411,12 +351,7 @@ function recomputeManualFit() {
   const manualParams = state.manualParams || {};
   const manualAttempts = (state.attempts || []).map((attempt) => {
     const features = attempt.features || {};
-    let prediction = 0;
-    PARAMETER_ORDER.forEach((key) => {
-      const coeff = Number(manualParams?.[key]) || 0;
-      const featureValue = Number(features[key]) || 0;
-      prediction += coeff * featureValue;
-    });
+    const { total: prediction } = applyParametersToFeatures(manualParams, features);
     const residual = prediction - attempt.sta_budget_s;
     const predictedDistance = computeManualPredictedDistance(attempt, prediction, state.splitDistance);
     return {
@@ -987,113 +922,6 @@ function sortRows(rows, key, direction) {
     return a.name.localeCompare(b.name);
   });
   return sorted;
-}
-
-function computeManualMetrics(attempts = []) {
-  if (!attempts.length) {
-    return null;
-  }
-  const absResiduals = attempts.map((attempt) => Math.abs(attempt.residual_s ?? 0));
-  const meanAbs = average(absResiduals);
-  const medianAbs = median(absResiduals);
-  const maxAbs = Math.max(...absResiduals);
-  const pctErrors = attempts
-    .map((attempt) => (attempt.sta_budget_s > 0 ? Math.abs(attempt.residual_s ?? 0) / attempt.sta_budget_s : NaN))
-    .filter((value) => Number.isFinite(value));
-  const meanPct = pctErrors.length ? average(pctErrors) : NaN;
-
-  const staPenalties = attempts
-    .map((attempt) => computeStaPenalty(attempt))
-    .filter((value) => Number.isFinite(value));
-  const distancePenalties = attempts
-    .map((attempt) => computeDistancePenalty(attempt))
-    .filter((value) => Number.isFinite(value));
-
-  const staPenalty = staPenalties.length ? average(staPenalties) : NaN;
-  const distancePenalty = distancePenalties.length ? average(distancePenalties) : NaN;
-  const combinedPenalty = computeCombinedPenalty(staPenalty, distancePenalty);
-
-  return {
-    mean_abs_error_s: meanAbs,
-    median_abs_error_s: medianAbs,
-    max_abs_error_s: maxAbs,
-    mean_abs_pct_error: meanPct,
-    sta_penalty: staPenalty,
-    distance_penalty: distancePenalty,
-    combined_penalty: combinedPenalty,
-  };
-}
-
-function computeStaPenalty(attempt) {
-  const budget = Number(attempt?.sta_budget_s);
-  if (!Number.isFinite(budget) || budget <= 0) {
-    return NaN;
-  }
-  const residual = Number(attempt?.residual_s);
-  if (!Number.isFinite(residual)) {
-    return NaN;
-  }
-  const normalized = Math.abs(residual) / budget;
-  const weight = residual >= 0 ? PENALTY_WEIGHTS.sta.over : PENALTY_WEIGHTS.sta.under;
-  return normalized * weight;
-}
-
-function computeDistancePenalty(attempt) {
-  const actual = Number(attempt?.distance_m);
-  const predicted = Number(attempt?.predicted_distance_m);
-  if (!Number.isFinite(actual) || actual <= 0 || !Number.isFinite(predicted) || predicted <= 0) {
-    return NaN;
-  }
-  const delta = predicted - actual;
-  const normalized = Math.abs(delta) / actual;
-  const weight = delta >= 0 ? PENALTY_WEIGHTS.distance.over : PENALTY_WEIGHTS.distance.under;
-  return normalized * weight;
-}
-
-function computeCombinedPenalty(staPenalty, distancePenalty) {
-  let total = 0;
-  let weightSum = 0;
-  if (Number.isFinite(staPenalty)) {
-    total += staPenalty * COMBINED_SCORE_WEIGHTS.sta;
-    weightSum += COMBINED_SCORE_WEIGHTS.sta;
-  }
-  if (Number.isFinite(distancePenalty)) {
-    total += distancePenalty * COMBINED_SCORE_WEIGHTS.distance;
-    weightSum += COMBINED_SCORE_WEIGHTS.distance;
-  }
-  if (weightSum <= 0) {
-    return NaN;
-  }
-  return total / weightSum;
-}
-
-function average(values = []) {
-  if (!values.length) {
-    return NaN;
-  }
-  const sum = values.reduce((acc, value) => acc + value, 0);
-  return sum / values.length;
-}
-
-function median(values = []) {
-  if (!values.length) {
-    return NaN;
-  }
-  const sorted = [...values].sort((a, b) => a - b);
-  const mid = Math.floor(sorted.length / 2);
-  return sorted.length % 2 === 0 ? (sorted[mid - 1] + sorted[mid]) / 2 : sorted[mid];
-}
-
-function computeManualPredictedDistance(attempt, prediction, splitDistance) {
-  const budget = Number(attempt?.sta_budget_s);
-  const actualDistance = Number(attempt?.distance_m);
-  if (!Number.isFinite(budget) || budget <= 0 || !Number.isFinite(actualDistance) || actualDistance <= 0) {
-    return NaN;
-  }
-  if (!Number.isFinite(prediction) || prediction <= 0) {
-    return NaN;
-  }
-  return (budget * actualDistance) / prediction;
 }
 
 function paramsNearlyEqual(base = {}, candidate = {}) {

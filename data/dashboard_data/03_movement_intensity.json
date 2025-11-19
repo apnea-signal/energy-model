@@ -3,10 +3,14 @@
     "metadata": {
       "split_distance_m": 50.0,
       "arm_leg_ratio": 1.5,
+      "split_time_s_median": 56.0,
+      "arm_pulls_median": 5.5,
+      "leg_kicks_median": 7.0,
       "arm_work_per_pull_median": 3.874,
       "leg_work_per_kick_median": 2.5826,
       "arm_work_total_median": 22.2949,
       "leg_work_total_median": 16.6832,
+      "total_work_per_split_median": 38.9781,
       "movement_intensity_median": 1.0
     },
     "athletes": [

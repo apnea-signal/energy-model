@@ -22,39 +22,64 @@
       <section>
         <h1>DNF Performance Calculator</h1>
         <p>
-          This workspace will reuse the movement-intensity and oxygen economy formulas to turn a static apnea PB, wall
-          cadence, and technique notes into a projected max distance. The inputs below document the expected fields while
-          the final UI is being built.
+          Convert a static apnea PB and technique template into projected splits using the Step&nbsp;1 movement intensity and
+          propulsion-fit parameters. Adjust the knobs below to see how the oxygen budget stretches across pacing choices.
         </p>
-      </section>
-      <section>
-        <h2>Planned Inputs</h2>
-        <ul>
-          <li>STA PB (mm:ss)</li>
-          <li>Kick vs pull emphasis, arm/leg ratios, and glide preference</li>
-          <li>Wall style (push + number of strokes off the wall)</li>
-          <li>Count of dolphins during the first 25&nbsp;m</li>
-          <li>Target pacing per 50&nbsp;m split</li>
-        </ul>
-      </section>
-      <section>
-        <h2>Projected Outputs</h2>
-        <ul>
-          <li>Suggested split times (T50, T100, ...)</li>
-          <li>Predicted max distance and the STA ceiling that supports it</li>
-          <li>
-            Oxygen spend per split highlighting where adjustments are most effective, so the coach can tune technique in
-            the practice set
-          </li>
-        </ul>
-      </section>
-      <section>
-        <h2>Status</h2>
         <p class="muted">
-          The data transforms are ready; wiring the UI is tracked separately. Use the Exploratory Dashboard and Models tabs
-          for the detailed numbers in the meantime.
+          Refresh the underlying parameters with <code>python 05_fit_DNF_oxygen_model.py</code> whenever the annotations or
+          STA reference list changes.
         </p>
+      </section>
+
+      <section>
+        <div class="section-header">
+          <h2>Budget & Technique Inputs</h2>
+          <p id="datasetLabel" class="muted"></p>
+        </div>
+        <div class="calculator-input-grid">
+          <label>
+            STA PB (mm:ss)
+            <input type="text" id="staInput" placeholder="6:30" />
+          </label>
+          <label>
+            Split distance (m)
+            <input type="number" id="splitDistanceInput" min="10" step="5" />
+          </label>
+          <label>
+            Leg kicks per arm pull
+            <input type="number" id="kicksPerArmInput" min="0" step="0.1" />
+          </label>
+          <label>
+            Additional kicks per split
+            <input type="number" id="extraKicksInput" min="0" step="0.5" />
+          </label>
+        </div>
+      </section>
+
+      <section>
+        <div class="section-header">
+          <h2>Simulation</h2>
+          <p id="simulationStatus" class="muted"></p>
+        </div>
+        <div class="table-container">
+          <div id="scenarioSummary" class="preview-table"></div>
+        </div>
+        <div id="simulationChart" class="chart"></div>
+        <aside id="simulationNote" class="note-shelf"></aside>
+      </section>
+
+      <section>
+        <div class="section-header">
+          <h2>Model Reference</h2>
+          <p class="muted">DNF propulsion coefficients pulled from <code>05_propulsion_fit.json</code>.</p>
+        </div>
+        <div id="formulaNote" class="note-shelf"></div>
+        <div id="formulaParameters"></div>
+        <div class="table-container">
+          <div id="parameterTable" class="preview-table"></div>
+        </div>
       </section>
     </main>
+    <script type="module" src="./js/calculatorDnf.js?v=20240530"></script>
   </body>
 </html>

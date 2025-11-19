@@ -274,18 +274,28 @@ def build_metadata(
     split_distance: float,
     arm_leg_ratio: float,
 ) -> dict:
+    split_time_median = median([record.split_time_s for record in records])
+    arm_pull_median = median([record.arm_pulls for record in records])
+    leg_kick_median = median([record.leg_kicks for record in records])
     arm_median = median([record.arm_work_per_pull for record in records])
     leg_median = median_optional([record.leg_work_per_kick for record in records])
     arm_total_median = median([record.arm_work_total for record in records])
     leg_total_median = median([record.leg_work_total for record in records])
     movement_median = median_optional([record.movement_intensity for record in records])
+    total_work_median = None
+    if arm_total_median is not None and leg_total_median is not None:
+        total_work_median = arm_total_median + leg_total_median
     return {
         "split_distance_m": split_distance,
         "arm_leg_ratio": arm_leg_ratio,
+        "split_time_s_median": round(split_time_median, 4) if split_time_median is not None else None,
+        "arm_pulls_median": round(arm_pull_median, 4) if arm_pull_median is not None else None,
+        "leg_kicks_median": round(leg_kick_median, 4) if leg_kick_median is not None else None,
         "arm_work_per_pull_median": round(arm_median, 4) if arm_median is not None else None,
         "leg_work_per_kick_median": round(leg_median, 4) if leg_median is not None else None,
         "arm_work_total_median": round(arm_total_median, 4) if arm_total_median is not None else None,
         "leg_work_total_median": round(leg_total_median, 4) if leg_total_median is not None else None,
+        "total_work_per_split_median": round(total_work_median, 4) if total_work_median is not None else None,
         "movement_intensity_median": round(movement_median, 4) if movement_median is not None else None,
     }
 
