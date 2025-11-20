@@ -31,15 +31,15 @@
       }
     ],
     "sta_projection": {
-      "slope": 0.382478,
+      "slope": 0.380978,
       "offset_seconds": 266.0,
-      "angle_degrees": 20.931,
+      "angle_degrees": 20.856,
       "sta_seconds_min": 266.0,
       "sta_seconds_max": 575.0,
       "distance_min": 132.0,
       "distance_max": 239.0,
-      "distance_median": 185.0,
-      "sample_count": 19
+      "distance_median": 190.0,
+      "sample_count": 20
     }
   },
   "DYNB": {
